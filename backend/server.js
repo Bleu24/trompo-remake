@@ -14,6 +14,7 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/owner', require('./routes/businessOwner.routes'));
 app.use('/api/businesses', require('./routes/business.routes'));
+app.use('/api/products', require('./routes/product.routes'));
 
 
 
