@@ -7,7 +7,7 @@ const User = require('../models/user.model');
 const jwt = require('jsonwebtoken');
 
 describe('Product API', () => {
-  let businessId, productId, token, createdProductId;
+  let businessId, productId, token, customerToken, createdProductId;
 
   beforeAll(async () => {
     await mongoose.connect(process.env.MONGO_URI);
@@ -15,10 +15,15 @@ describe('Product API', () => {
     await Sellable.deleteMany({});
     await User.deleteMany({});
 
-    // create user and token for authenticated requests
+    // create owner user and token for authenticated requests
     const user = new User({ name: 'Test Owner', email: 'owner@test.com', password: 'hashed', role: 'owner' });
     await user.save();
     token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    // create customer user and token
+    const customer = new User({ name: 'Test Customer', email: 'customer@test.com', password: 'hashed', role: 'customer' });
+    await customer.save();
+    customerToken = jwt.sign({ userId: customer._id, role: customer.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     const business = new Business({ name: 'Test Business', ownerId: user._id });
     await business.save();
@@ -90,6 +95,20 @@ describe('Product API', () => {
     expect(res.statusCode).toBe(201);
     expect(res.body).toHaveProperty('product');
     createdProductId = res.body.product._id;
+  });
+
+  it('should fail to create a product as customer', async () => {
+    const res = await request(app)
+      .post('/api/products/')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({
+        businessId: businessId.toString(),
+        title: 'Customer Product',
+        price: 15,
+        inventory: 1,
+      });
+
+    expect(res.statusCode).toBe(403);
   });
 
   it('should update a product', async () => {

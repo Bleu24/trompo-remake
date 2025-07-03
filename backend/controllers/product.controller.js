@@ -38,6 +38,9 @@ exports.getProductById = async (req, res) => {
 // Create a new product
 exports.createProduct = async (req, res) => {
   try {
+    if (req.user.role !== 'owner') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
     const { businessId, title, description, price, inventory } = req.body;
 
     const product = new Sellable({
