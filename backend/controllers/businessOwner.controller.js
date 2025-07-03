@@ -12,7 +12,7 @@ exports.registerAsOwner = async (req, res) => {
     const owner = new BusinessOwner({ userId });
     await owner.save();
 
-    // Optionally update role in User model
+    // Update role in User model
     await User.findByIdAndUpdate(userId, { role: 'owner' });
 
     res.status(201).json({ message: 'Business owner registered', owner });
