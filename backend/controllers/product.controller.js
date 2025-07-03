@@ -34,3 +34,52 @@ exports.getProductById = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+// Create a new product
+exports.createProduct = async (req, res) => {
+  try {
+    const { businessId, title, description, price, inventory } = req.body;
+
+    const product = new Sellable({
+      businessId,
+      title,
+      description,
+      type: 'product',
+      price,
+      inventory,
+    });
+
+    await product.save();
+    res.status(201).json({ message: 'Product created', product });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Update a product
+exports.updateProduct = async (req, res) => {
+  try {
+    const updates = req.body;
+    const product = await Sellable.findOneAndUpdate(
+      { _id: req.params.id, type: 'product' },
+      updates,
+      { new: true }
+    );
+
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    res.json({ message: 'Product updated', product });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Delete a product
+exports.deleteProduct = async (req, res) => {
+  try {
+    const product = await Sellable.findOneAndDelete({ _id: req.params.id, type: 'product' });
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    res.json({ message: 'Product deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
