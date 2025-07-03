@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const reviewSchema = new mongoose.Schema({
-  customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
-  businessId: { type: mongoose.Schema.Types.ObjectId, ref: 'Business' },
-  rating: { type: Number, min: 1, max: 5 },
+  customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  businessId: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', required: true },
+  rating: { type: Number, min: 1, max: 5, required: true },
   comment: String,
 }, { timestamps: true });
 

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const verificationRequestSchema = new mongoose.Schema({
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'BusinessOwner', required: true },
+  businessId: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', required: true },
   documents: [String], // e.g., URLs to uploaded IDs
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   adminNotes: String,
