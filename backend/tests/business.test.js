@@ -63,4 +63,12 @@ beforeAll(async () => {
     expect(res.body).toHaveProperty('business');
     expect(res.body.business.name).toBe('Async Studio');
   });
+
+  it('should search businesses by name', async () => {
+    const res = await request(app).get('/api/businesses/search').query({ q: 'Stu' });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBe(1);
+    expect(res.body[0].name).toBe('Async Studio');
+  });
 });
