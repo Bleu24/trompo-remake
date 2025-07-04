@@ -19,6 +19,7 @@ app.use('/api/owner', require('./routes/businessOwner.routes'));
 app.use('/api/businesses', require('./routes/business.routes'));
 app.use('/api/products', require('./routes/product.routes'));
 app.use('/api/customers', require('./routes/customer.routes'));
+app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api', require('./routes/review.routes'));
 app.use('/api/chat', require('./routes/chat.routes'));
