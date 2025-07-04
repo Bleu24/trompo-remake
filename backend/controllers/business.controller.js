@@ -49,4 +49,19 @@ exports.getBusinessById = async (req, res) => {
   }
 };
 
+// Search businesses by name (wildcard)
+exports.searchBusinesses = async (req, res) => {
+  try {
+    const term = req.query.q || '';
+    const regex = new RegExp(term, 'i');
+    const businesses = await Business.find({ name: { $regex: regex } })
+      .populate('ownerId', 'name')
+      .populate('categoryId', 'name')
+      .populate('locationId', 'name');
+    res.json(businesses);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 

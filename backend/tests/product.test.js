@@ -64,6 +64,14 @@ describe('Product API', () => {
     expect(res.body.length).toBeGreaterThanOrEqual(2);
   });
 
+  it('should search products by title', async () => {
+    const res = await request(app).get('/api/products/search').query({ q: 'Sec' });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBe(1);
+    expect(res.body[0].title).toBe('Second Product');
+  });
+
   it('should get products by business', async () => {
     const res = await request(app).get(`/api/products/business/${businessId}`);
     expect(res.statusCode).toBe(200);

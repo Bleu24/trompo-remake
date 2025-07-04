@@ -86,3 +86,16 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+// Search products by title (wildcard)
+exports.searchProducts = async (req, res) => {
+  try {
+    const term = req.query.q || '';
+    const regex = new RegExp(term, 'i');
+    const products = await Sellable.find({ type: 'product', title: { $regex: regex } })
+      .populate('businessId', 'name');
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
