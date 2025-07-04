@@ -20,6 +20,12 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Required Environment Variables
+
+Set the following variables in a `.env` file or in your shell before running the frontend:
+
+- `NEXT_PUBLIC_SOCKET_URL` - URL of the Socket.IO server used by the chat
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
