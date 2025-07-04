@@ -1,11 +1,17 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user.model');
-const generateToken = require('../utils/generateToken.utils'); 
+const generateToken = require('../utils/generateToken.utils');
+const Customer = require('../models/customer.model');
+const BusinessOwner = require('../models/businessOwner.model');
 
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
+
+    if (!['customer', 'owner'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser)
@@ -15,6 +21,12 @@ exports.register = async (req, res) => {
 
     const user = new User({ name, email, password: hashedPassword, role });
     await user.save();
+
+    if (role === 'customer') {
+      await Customer.create({ userId: user._id });
+    } else if (role === 'owner') {
+      await BusinessOwner.create({ userId: user._id });
+    }
 
     const token = generateToken(user);
     res.status(201).json({ user, token });
