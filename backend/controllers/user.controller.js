@@ -1,8 +1,4 @@
 const User = require('../models/user.model');
-const bcrypt = require('bcryptjs');
-const generateToken = require('../utils/generateToken.utils');
-const Customer = require('../models/customer.model');
-const BusinessOwner = require('../models/businessOwner.model');
 
 // Search users by name or email (wildcard)
 exports.searchUsers = async (req, res) => {
