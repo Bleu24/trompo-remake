@@ -16,6 +16,7 @@ app.use('/api/owner', require('./routes/businessOwner.routes'));
 app.use('/api/businesses', require('./routes/business.routes'));
 app.use('/api/products', require('./routes/product.routes'));
 app.use('/api/customers', require('./routes/customer.routes'));
+app.use('/api/admin', require('./routes/admin.routes'));
 
 // Start server
 const PORT = process.env.PORT;
