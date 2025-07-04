@@ -43,6 +43,7 @@ Backend tests are located in `backend/tests`. Run them with:
 
 ```bash
 cd backend
+cd tests
 npm test
 ```
 
