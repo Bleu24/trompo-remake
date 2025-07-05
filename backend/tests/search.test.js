@@ -225,6 +225,56 @@ describe('Search API', () => {
       expect(res.body.data.businesses.length + res.body.data.products.length + res.body.data.services.length).toBeGreaterThan(1);
     });
 
+    it('should filter businesses by location', async () => {
+      const res = await request(app)
+        .get('/api/search')
+        .query({ type: 'business', location: 'Metro Manila' });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.businesses).toHaveLength(2);
+      res.body.data.businesses.forEach(b => {
+        expect(b.locationId.name).toBe('Metro Manila');
+      });
+    });
+
+    it('should filter products by location', async () => {
+      const res = await request(app)
+        .get('/api/search')
+        .query({ type: 'product', location: 'Metro Manila' });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.products).toHaveLength(2);
+      res.body.data.products.forEach(p => {
+        expect(p.businessId.locationId.name).toBe('Metro Manila');
+      });
+    });
+
+    it('should filter businesses by category', async () => {
+      const res = await request(app)
+        .get('/api/search')
+        .query({ type: 'business', category: 'Food' });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.businesses).toHaveLength(2);
+      res.body.data.businesses.forEach(b => {
+        expect(b.categoryId.name).toBe('Food');
+      });
+    });
+
+    it('should filter services by category', async () => {
+      const res = await request(app)
+        .get('/api/search')
+        .query({ type: 'service', category: 'Technology' });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.services).toHaveLength(1);
+      expect(res.body.data.services[0].businessId.categoryId.name).toBe('Technology');
+    });
+
     it('should filter by price range', async () => {
       const res = await request(app)
         .get('/api/search')
