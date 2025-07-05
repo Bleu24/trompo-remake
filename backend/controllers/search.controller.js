@@ -129,9 +129,25 @@ exports.globalSearch = async (req, res) => {
         .limit(parseInt(limit))
         .skip((parseInt(page) - 1) * parseInt(limit));
 
+      const filteredSellables = sellables.filter(sellable => {
+        const business = sellable.businessId;
+        if (!business || !business.isVerified) return false;
+        if (locationFilter.locationId &&
+            (!business.locationId ||
+              business.locationId._id.toString() !== locationFilter.locationId.toString())) {
+          return false;
+        }
+        if (categoryFilter.categoryId &&
+            (!business.categoryId ||
+              business.categoryId._id.toString() !== categoryFilter.categoryId.toString())) {
+          return false;
+        }
+        return true;
+      });
+
       // Separate products and services
-      searchResults.products = sellables.filter(s => s.type === 'product');
-      searchResults.services = sellables.filter(s => s.type === 'service');
+      searchResults.products = filteredSellables.filter(s => s.type === 'product');
+      searchResults.services = filteredSellables.filter(s => s.type === 'service');
     }
 
     // Calculate total results
