@@ -13,10 +13,9 @@ exports.globalSearch = async (req, res) => {
       category,
       priceMin,
       priceMax,
-      rating,
       page = 1,
       limit = 20,
-      sortBy = 'relevance' // 'relevance', 'price', 'rating', 'newest'
+      sortBy = 'relevance' // 'relevance', 'price', 'newest'
     } = req.query;
 
     const searchResults = {
@@ -77,9 +76,6 @@ exports.globalSearch = async (req, res) => {
 
       let businessSort = {};
       switch (sortBy) {
-        case 'rating':
-          businessSort = { averageRating: -1 };
-          break;
         case 'newest':
           businessSort = { createdAt: -1 };
           break;
