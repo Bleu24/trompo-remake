@@ -4,9 +4,16 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import SearchBar from '@/components/SearchBar';
 
+interface SearchResults {
+  totalResults: number;
+  businesses?: any[];
+  products?: any[];
+  services?: any[];
+}
+
 export default function SearchPage() {
   const searchParams = useSearchParams();
-  const [results, setResults] = useState(null);
+  const [results, setResults] = useState<SearchResults | null>(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     type: 'all',
@@ -120,11 +127,11 @@ export default function SearchPage() {
             </div>
 
             {/* Business Results */}
-            {results.businesses?.length > 0 && (
+            {(results.businesses?.length ?? 0) > 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-semibold mb-4">Businesses</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {results.businesses.map((business: any) => (
+                  {results.businesses?.map((business: any) => (
                     <div key={business._id} className="border rounded-lg p-4 hover:shadow-md transition duration-200">
                       <h4 className="font-semibold text-lg mb-2">{business.name}</h4>
                       <p className="text-gray-600 dark:text-gray-400 mb-2">{business.description}</p>
@@ -139,11 +146,11 @@ export default function SearchPage() {
             )}
 
             {/* Product Results */}
-            {results.products?.length > 0 && (
+            {(results.products?.length ?? 0) > 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-semibold mb-4">Products</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {results.products.map((product: any) => (
+                  {results.products?.map((product: any) => (
                     <div key={product._id} className="border rounded-lg p-4 hover:shadow-md transition duration-200">
                       <h4 className="font-semibold text-lg mb-2">{product.title}</h4>
                       <p className="text-gray-600 dark:text-gray-400 mb-2">{product.description}</p>
@@ -158,11 +165,11 @@ export default function SearchPage() {
             )}
 
             {/* Service Results */}
-            {results.services?.length > 0 && (
+            {(results.services?.length ?? 0) > 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-semibold mb-4">Services</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {results.services.map((service: any) => (
+                  {results.services?.map((service: any) => (
                     <div key={service._id} className="border rounded-lg p-4 hover:shadow-md transition duration-200">
                       <h4 className="font-semibold text-lg mb-2">{service.title}</h4>
                       <p className="text-gray-600 dark:text-gray-400 mb-2">{service.description}</p>
