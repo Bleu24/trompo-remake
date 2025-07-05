@@ -95,7 +95,6 @@ export default function SearchPage() {
             >
               <option value="relevance">Most Relevant</option>
               <option value="price">Price: Low to High</option>
-              <option value="rating">Highest Rated</option>
               <option value="newest">Newest First</option>
             </select>
             
