@@ -5,9 +5,25 @@ const http = require('http');
 const { Server } = require('socket.io');
 const connectDB = require('./config/db.config');
 const { setupSocket } = require('./controllers/chat.controller');
+const seed = require('./utils/seedDatabase.utils');
 
 dotenv.config();
-connectDB();
+
+// Initialize database and seed if needed
+async function initializeDatabase() {
+  try {
+    await connectDB();
+    // Only seed if in development mode or if SEED_DB environment variable is set
+    if (process.env.NODE_ENV === 'development' || process.env.SEED_DB === 'true') {
+      await seed();
+    }
+  } catch (error) {
+    console.error('Database initialization error:', error);
+    process.exit(1);
+  }
+}
+
+initializeDatabase();
 
 const app = express();
 app.use(cors());
@@ -31,5 +47,6 @@ const io = new Server(server, { cors: { origin: '*' } });
 setupSocket(io);
 
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
 module.exports = app;
