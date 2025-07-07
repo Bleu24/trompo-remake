@@ -24,3 +24,139 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Custom Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hero Animations */
+.hero-animate {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.hero-logo {
+  animation: slideInDown 0.6s ease-out 0.2s both;
+}
+
+.hero-headline {
+  animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.hero-description {
+  animation: fadeInUp 0.8s ease-out 0.6s both;
+}
+
+.hero-buttons {
+  animation: fadeInUp 0.8s ease-out 0.8s both;
+}
+
+/* Scroll-triggered animations */
+.scroll-animate {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s ease-out;
+}
+
+.scroll-animate.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Feature Cards */
+.feature-card {
+  @apply bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2;
+}
+
+.feature-icon {
+  @apply w-16 h-16 rounded-full flex items-center justify-center mb-6 transition-all duration-300;
+}
+
+/* Stats Animation */
+.stat-item {
+  @apply transform hover:scale-105 transition-transform duration-300;
+}
+
+/* Button Styles */
+.btn-primary {
+  @apply bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-semibold text-lg flex items-center justify-center transition-all duration-300 hover:shadow-lg hover:scale-105 w-full sm:w-auto;
+}
+
+.btn-secondary {
+  @apply bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-200 hover:border-gray-300 px-8 py-4 rounded-full font-semibold text-lg flex items-center justify-center transition-all duration-300 hover:shadow-lg hover:scale-105 w-full sm:w-auto;
+}
+
+.btn-white {
+  @apply bg-white hover:bg-gray-100 text-blue-600 px-8 py-4 rounded-full font-semibold text-lg flex items-center justify-center transition-all duration-300 hover:shadow-lg hover:scale-105 w-full sm:w-auto;
+}
+
+.btn-outline-white {
+  @apply bg-transparent hover:bg-white hover:text-blue-600 text-white border-2 border-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 hover:shadow-lg hover:scale-105 w-full sm:w-auto;
+}
+
+/* Hover Effects */
+.feature-card:hover .feature-icon {
+  transform: scale(1.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .hero-animate {
+    padding-top: 3rem;
+  }
+
+  .feature-card {
+    padding: 1.5rem;
+  }
+}

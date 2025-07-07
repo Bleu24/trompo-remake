@@ -1,103 +1,246 @@
-import Image from "next/image";
+"use client"
+
+import { useEffect, useRef } from "react"
+import { Building2, Search, MapPin, Star, Users, TrendingUp } from "lucide-react"
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const heroRef = useRef<HTMLElement>(null)
+  const featuresRef = useRef<HTMLElement>(null)
+  const statsRef = useRef<HTMLElement>(null)
+  const ctaRef = useRef<HTMLElement>(null)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px",
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("animate-in")
+        }
+      })
+    }, observerOptions)
+
+    const elements = [featuresRef.current, statsRef.current, ctaRef.current]
+    elements.forEach((el) => {
+      if (el) observer.observe(el)
+    })
+
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+      {/* Hero Section */}
+      <main ref={heroRef} className="hero-animate px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center">
+            {/* Logo/Brand */}
+            <div className="flex items-center justify-center mb-8 hero-logo">
+              <Building2 className="h-12 w-12 text-blue-600 mr-3" />
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900">Trompo</h1>
+            </div>
+
+            {/* Hero Headline */}
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-800 mb-6 hero-headline">
+              Discover Amazing Local Businesses
+              <span className="block text-blue-600 mt-2">Across the Philippines</span>
+            </h2>
+
+            {/* Hero Description */}
+            <p className="text-lg sm:text-xl text-gray-600 mb-8 max-w-3xl mx-auto hero-description">
+              Connect with authentic Filipino businesses in your neighborhood. From traditional sari-sari stores to
+              modern cafes, find the best local gems that make our communities special.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center hero-buttons">
+              <button className="btn-primary group">
+                <Search className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+                Explore Businesses
+              </button>
+              <button className="btn-secondary group">
+                <Building2 className="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform" />
+                List Your Business
+              </button>
+            </div>
+          </div>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      {/* Features Section */}
+      <section ref={featuresRef} className="py-20 px-4 sm:px-6 lg:px-8 scroll-animate">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Why Choose Trompo?</h3>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              We're more than just a directory - we're your gateway to authentic Filipino business experiences
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="feature-card group">
+              <div className="feature-icon bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white">
+                <MapPin className="h-8 w-8" />
+              </div>
+              <h4 className="text-xl font-semibold text-gray-900 mb-3">Local Focus</h4>
+              <p className="text-gray-600">
+                Discover businesses in your barangay and support your local community with every purchase.
+              </p>
+            </div>
+
+            <div className="feature-card group">
+              <div className="feature-icon bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white">
+                <Star className="h-8 w-8" />
+              </div>
+              <h4 className="text-xl font-semibold text-gray-900 mb-3">Verified Reviews</h4>
+              <p className="text-gray-600">
+                Read authentic reviews from fellow Filipinos to make informed decisions about where to shop and dine.
+              </p>
+            </div>
+
+            <div className="feature-card group">
+              <div className="feature-icon bg-purple-100 text-purple-600 group-hover:bg-purple-600 group-hover:text-white">
+                <Users className="h-8 w-8" />
+              </div>
+              <h4 className="text-xl font-semibold text-gray-900 mb-3">Community Driven</h4>
+              <p className="text-gray-600">
+                Built by Filipinos, for Filipinos. Join a community that celebrates local entrepreneurship.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section ref={statsRef} className="py-16 px-4 sm:px-6 lg:px-8 bg-white scroll-animate">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div className="stat-item">
+              <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">1,000+</div>
+              <div className="text-gray-600">Local Businesses</div>
+            </div>
+            <div className="stat-item">
+              <div className="text-3xl sm:text-4xl font-bold text-green-600 mb-2">50+</div>
+              <div className="text-gray-600">Cities Covered</div>
+            </div>
+            <div className="stat-item">
+              <div className="text-3xl sm:text-4xl font-bold text-purple-600 mb-2">5,000+</div>
+              <div className="text-gray-600">Happy Customers</div>
+            </div>
+            <div className="stat-item">
+              <div className="text-3xl sm:text-4xl font-bold text-orange-600 mb-2">4.8★</div>
+              <div className="text-gray-600">Average Rating</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section
+        ref={ctaRef}
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-green-600 scroll-animate"
+      >
+        <div className="max-w-4xl mx-auto text-center">
+          <h3 className="text-3xl sm:text-4xl font-bold text-white mb-6">
+            Ready to Discover Your Next Favorite Local Spot?
+          </h3>
+          <p className="text-xl text-blue-100 mb-8">
+            Join thousands of Filipinos who trust Trompo to find the best local businesses in their area.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button className="btn-white group">
+              <TrendingUp className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+              Get Started Today
+            </button>
+            <button className="btn-outline-white">Learn More</button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center mb-4">
+                <Building2 className="h-8 w-8 text-blue-400 mr-2" />
+                <span className="text-xl font-bold">Trompo</span>
+              </div>
+              <p className="text-gray-400">Connecting Filipino communities through local business discovery.</p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">For Customers</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Find Businesses
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Write Reviews
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Mobile App
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">For Businesses</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    List Your Business
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Business Tools
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Success Stories
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Support</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Help Center
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Contact Us
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Privacy Policy
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 Trompo. Made with ❤️ for Filipino communities.</p>
+          </div>
+        </div>
       </footer>
     </div>
-  );
+  )
 }
