@@ -38,6 +38,7 @@ app.use('/api/search', require('./routes/search.routes'));
 app.use('/api/customers', require('./routes/customer.routes'));
 app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
+app.use('/api/transactions', require('./routes/transaction.routes'));
 app.use('/api', require('./routes/review.routes'));
 app.use('/api/chat', require('./routes/chat.routes'));
 
