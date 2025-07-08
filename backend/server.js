@@ -40,12 +40,20 @@ app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/transactions', require('./routes/transaction.routes'));
 app.use('/api', require('./routes/review.routes'));
-app.use('/api/chat', require('./routes/chat.routes'));
 
 // Start server
 const PORT = process.env.PORT;
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
+
+// Make io available to chat routes
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+app.use('/api/chat', require('./routes/chat.routes'));
+
 setupSocket(io);
 
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
