@@ -1,13 +1,64 @@
 @import "tailwindcss";
 
 :root {
+  /* Light theme colors */
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Page gradient backgrounds */
+  --gradient-from: #dbeafe; /* blue-50 */
+  --gradient-via: #ffffff; /* white */
+  --gradient-to: #f0fdf4; /* green-50 */
+  
+  /* Primary colors */
+  --primary-blue: #2563eb; /* blue-600 */
+  --primary-green: #16a34a; /* green-600 */
+  --primary-orange: #ea580c; /* orange-600 */
+  --primary-red: #dc2626; /* red-600 */
+  
+  /* Card/Form backgrounds */
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb; /* gray-200 */
+  
+  /* Text colors */
+  --text-primary: #111827; /* gray-900 */
+  --text-secondary: #4b5563; /* gray-600 */
+  --text-muted: #6b7280; /* gray-500 */
 }
 
 :root.dark {
+  /* Dark theme colors */
   --background: #0a0a0a;
   --foreground: #ededed;
+  
+  /* Page gradient backgrounds */
+  --gradient-from: #111827; /* gray-900 */
+  --gradient-via: #1f2937; /* gray-800 */
+  --gradient-to: #000000; /* black */
+  
+  /* Primary colors */
+  --primary-blue: #3b82f6; /* blue-500 */
+  --primary-green: #22c55e; /* green-500 */
+  --primary-orange: #f97316; /* orange-500 */
+  --primary-red: #ef4444; /* red-500 */
+  
+  /* Card/Form backgrounds */
+  --card-bg: #1f2937; /* gray-800 */
+  --card-border: #374151; /* gray-700 */
+  
+  /* Text colors */
+  --text-primary: #f9fafb; /* gray-50 */
+  --text-secondary: #d1d5db; /* gray-300 */
+  --text-muted: #9ca3af; /* gray-400 */
+}
+
+/* Global styles */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
@@ -15,6 +66,11 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme-aware gradient background utility */
+.theme-gradient-bg {
+  background: linear-gradient(to bottom right, var(--gradient-from), var(--gradient-via), var(--gradient-to));
 }
 
 /* Custom Animations */
@@ -108,22 +164,30 @@ body {
 
 /* Feature Cards */
 .feature-card {
-  background: white;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 2rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-  border: 1px solid #f3f4f6;
 }
 
 .feature-card:hover {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.15);
   transform: translateY(-0.5rem);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 :root.dark .feature-card {
-  background: #1f2937;
-  border-color: #374151;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root.dark .feature-card:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .feature-icon {
@@ -135,6 +199,25 @@ body {
   justify-content: center;
   margin-bottom: 1.5rem;
   transition: all 0.3s ease;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+:root.dark .feature-icon {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:root.dark .feature-card:hover .feature-icon {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* Stats Animation */
@@ -275,9 +358,29 @@ body {
   color: #1d4ed8;
 }
 
-/* Hover Effects */
-.feature-card:hover .feature-icon {
-  transform: scale(1.1);
+/* Text truncation utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 
 /* Responsive adjustments */
