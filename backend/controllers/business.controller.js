@@ -37,11 +37,13 @@ exports.getAllBusinesses = async (req, res) => {
 exports.getBusinessById = async (req, res) => {
   try {
     const business = await Business.findById(req.params.id)
-      .populate('ownerId', 'name')
       .populate('categoryId', 'name')
-      .populate('locationId', 'name');
+      .populate('locationId', 'name')
+      .populate('ownerId', 'userId');
 
-    if (!business) return res.status(404).json({ message: 'Business not found' });
+    if (!business) {
+      return res.status(404).json({ message: 'Business not found' });
+    }
 
     res.json(business);
   } catch (err) {
