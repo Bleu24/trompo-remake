@@ -40,7 +40,7 @@ export default function ChatWidget() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg"
+        className="fixed bottom-4 right-4 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors duration-200"
       >
         Chat
       </button>
@@ -48,23 +48,23 @@ export default function ChatWidget() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 w-72 bg-white border shadow-lg rounded-lg p-2 text-sm">
+    <div className="fixed bottom-4 right-4 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-lg p-2 text-sm">
       <div className="flex justify-between mb-2">
-        <span className="font-bold">Chat</span>
-        <button onClick={() => setOpen(false)} className="text-gray-500">×</button>
+        <span className="font-bold text-gray-900 dark:text-gray-100">Chat</span>
+        <button onClick={() => setOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">×</button>
       </div>
-      <div className="h-48 overflow-y-auto mb-2">
+      <div className="h-48 overflow-y-auto mb-2 bg-gray-50 dark:bg-gray-900 rounded p-2">
         {messages.map((m) => (
-          <div key={m.id}>{m.text}</div>
+          <div key={m.id} className="text-gray-800 dark:text-gray-200 mb-1">{m.text}</div>
         ))}
       </div>
       <div className="flex gap-1">
         <input
-          className="border p-1 flex-grow"
+          className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-1 flex-grow rounded focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
-        <button className="bg-blue-500 text-white px-2" onClick={sendMessage}>
+        <button className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-400 dark:hover:bg-blue-500 text-white px-2 rounded transition-colors duration-200" onClick={sendMessage}>
           Send
         </button>
       </div>
