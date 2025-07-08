@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Notification from '@/components/Notification';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -9,6 +11,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,16 +24,35 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
+      
+      const data = await res.json();
+      
       if (!res.ok) {
-        const data = await res.json();
         setError(data.message || 'Failed to login');
       } else {
-        // success placeholder
+        console.log('Login successful, received data:', data);
+        
+        // Store the token in localStorage
+        localStorage.setItem('authToken', data.token);
+        console.log('Token stored in localStorage');
+        
+        // Trigger a storage event to update navbar immediately
+        window.dispatchEvent(new Event('storage'));
+        
+        // Show success notification
+        setNotification({ message: 'Login successful! Welcome back!', type: 'success' });
+        
+        // Clear form
         setEmail('');
         setPassword('');
-        alert('Logged in successfully');
+        
+        // Redirect to dashboard after a short delay to show the notification
+        setTimeout(() => {
+          console.log('Redirecting to dashboard...');
+          router.push('/dashboard');
+        }, 1000);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to login');
     } finally {
       setLoading(false);
@@ -161,6 +184,15 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      
+      {/* Notification */}
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 }
