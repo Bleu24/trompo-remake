@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function SignupPage() {
@@ -11,6 +12,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'customer' | 'owner' | null>(null);
+  const router = useRouter();
 
   const register = async (role: 'customer' | 'owner') => {
     setLoading(true);
@@ -21,17 +23,37 @@ export default function SignupPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, role }),
       });
+      
+      const data = await res.json();
+      
       if (!res.ok) {
-        const data = await res.json();
         setError(data.message || 'Registration failed');
       } else {
+        // Auto-login after successful registration
+        if (data.token) {
+          localStorage.setItem('authToken', data.token);
+        } else {
+          // If no token returned, try to login automatically
+          const loginRes = await fetch('http://localhost:5000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+          
+          if (loginRes.ok) {
+            const loginData = await loginRes.json();
+            localStorage.setItem('authToken', loginData.token);
+          }
+        }
+        
+        // Clear form and redirect to dashboard
         setName('');
         setEmail('');
         setPassword('');
         setSelectedRole(null);
-        alert('Registered successfully');
+        router.push('/dashboard');
       }
-    } catch (err) {
+    } catch {
       setError('Registration failed');
     } finally {
       setLoading(false);
