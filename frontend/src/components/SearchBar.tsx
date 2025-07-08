@@ -83,7 +83,7 @@ export default function SearchBar() {
               handleSearch();
             }
           }}
-          className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+          className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-blue-500 dark:focus:ring-orange-500 focus:border-transparent dark:bg-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
         />
         
         {/* Search Icon */}
@@ -98,7 +98,7 @@ export default function SearchBar() {
           onClick={() => handleSearch()}
           className="absolute inset-y-0 right-0 pr-2 flex items-center"
         >
-          <div className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full transition duration-200">
+          <div className="bg-blue-500 hover:bg-blue-600 dark:bg-orange-500 dark:hover:bg-orange-600 text-white px-4 py-2 rounded-full transition duration-200">
             Search
           </div>
         </button>
@@ -109,7 +109,7 @@ export default function SearchBar() {
         <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
           {isLoading ? (
             <div className="p-4 text-center text-gray-500">
-              <div className="animate-spin w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+              <div className="animate-spin w-5 h-5 border-2 border-blue-500 dark:border-orange-500 border-t-transparent rounded-full mx-auto mb-2"></div>
               Loading suggestions...
             </div>
           ) : (
