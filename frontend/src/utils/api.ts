@@ -175,6 +175,70 @@ export const businessApi = {
   },
 };
 
+// Chat API
+export const chatApi = {
+  // Get user's conversations
+  getConversations: async () => {
+    const response = await fetch(`${API_BASE_URL}/chat/conversations`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<Conversation[]>(response);
+  },
+
+  // Get messages for a conversation
+  getMessages: async (conversationId: string) => {
+    const response = await fetch(`${API_BASE_URL}/chat/conversations/${conversationId}/messages`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<ChatMessage[]>(response);
+  },
+
+  // Get unread count for a conversation
+  getUnreadCount: async (conversationId: string) => {
+    const response = await fetch(`${API_BASE_URL}/chat/conversations/${conversationId}/unread`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<{ unreadCount: number }>(response);
+  },
+
+  // Start a new conversation
+  startConversation: async (participantId: string) => {
+    const response = await fetch(`${API_BASE_URL}/chat/conversations`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ participantId }),
+    });
+    return handleResponse<Conversation>(response);
+  },
+
+  // Send a message
+  sendMessage: async (conversationId: string, text: string) => {
+    const response = await fetch(`${API_BASE_URL}/chat/messages`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ conversationId, text }),
+    });
+    return handleResponse<ChatMessage>(response);
+  },
+
+  // Mark messages as read
+  markAsRead: async (conversationId: string) => {
+    const response = await fetch(`${API_BASE_URL}/chat/conversations/${conversationId}/read`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<{ message: string; count: number }>(response);
+  },
+
+  // Search users
+  searchUsers: async (query: string) => {
+    const response = await fetch(`${API_BASE_URL}/chat/users/search?q=${encodeURIComponent(query)}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<ChatUser[]>(response);
+  },
+};
+
 // Types
 export interface Product {
   _id: string;
@@ -249,4 +313,48 @@ export interface SearchResults {
 export interface SearchSuggestion {
   text: string;
   type: 'business' | 'product' | 'service';
+}
+
+export interface Conversation {
+  _id: string;
+  participants: ChatUser[];
+  lastMessage?: {
+    _id: string;
+    text: string;
+    createdAt: string;
+    senderId: {
+      _id: string;
+      name: string;
+    };
+  };
+  lastActivity: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatMessage {
+  _id: string;
+  conversationId: string;
+  senderId: {
+    _id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+  text: string;
+  readBy: Array<{
+    userId: string;
+    readAt: string;
+  }>;
+  isEdited: boolean;
+  editedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatUser {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
 }
