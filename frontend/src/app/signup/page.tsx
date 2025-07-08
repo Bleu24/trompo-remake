@@ -46,14 +46,14 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-100 via-red-50 to-yellow-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo/Brand Section */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-orange-500 to-red-500 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-green-600 dark:from-orange-500 dark:to-red-500 mb-4">
             <span className="text-2xl font-bold text-white">🌮</span>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 dark:from-orange-600 dark:to-red-600 bg-clip-text text-transparent">
             Join Trompo
           </h1>
           <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
@@ -83,7 +83,7 @@ export default function SignupPage() {
                 <input
                   type="text"
                   required
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition duration-200 placeholder-gray-500 dark:placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition duration-200 placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="Enter your full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -105,7 +105,7 @@ export default function SignupPage() {
                 <input
                   type="email"
                   required
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition duration-200 placeholder-gray-500 dark:placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition duration-200 placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -127,7 +127,7 @@ export default function SignupPage() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition duration-200 placeholder-gray-500 dark:placeholder-gray-400 pr-12"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition duration-200 placeholder-gray-500 dark:placeholder-gray-400 pr-12"
                   placeholder="Create a password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -162,20 +162,20 @@ export default function SignupPage() {
                   onClick={() => setSelectedRole('customer')}
                   className={`p-4 rounded-lg border-2 transition duration-200 ${
                     selectedRole === 'customer'
-                      ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
+                      ? 'border-blue-500 bg-blue-50 dark:border-orange-500 dark:bg-orange-900/20'
                       : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                   }`}
                 >
                   <div className="flex flex-col items-center space-y-2">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      selectedRole === 'customer' ? 'bg-orange-500 text-white' : 'bg-gray-200 dark:bg-gray-700'
+                      selectedRole === 'customer' ? 'bg-blue-500 text-white dark:bg-orange-500' : 'bg-gray-200 dark:bg-gray-700'
                     }`}>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     </div>
                     <span className={`text-sm font-medium ${
-                      selectedRole === 'customer' ? 'text-orange-700 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300'
+                      selectedRole === 'customer' ? 'text-blue-700 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300'
                     }`}>
                       Customer
                     </span>
@@ -190,20 +190,20 @@ export default function SignupPage() {
                   onClick={() => setSelectedRole('owner')}
                   className={`p-4 rounded-lg border-2 transition duration-200 ${
                     selectedRole === 'owner'
-                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                      ? 'border-green-500 bg-green-50 dark:border-purple-500 dark:bg-purple-900/20'
                       : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                   }`}
                 >
                   <div className="flex flex-col items-center space-y-2">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      selectedRole === 'owner' ? 'bg-purple-500 text-white' : 'bg-gray-200 dark:bg-gray-700'
+                      selectedRole === 'owner' ? 'bg-green-500 text-white dark:bg-purple-500' : 'bg-gray-200 dark:bg-gray-700'
                     }`}>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                     </div>
                     <span className={`text-sm font-medium ${
-                      selectedRole === 'owner' ? 'text-purple-700 dark:text-purple-400' : 'text-gray-700 dark:text-gray-300'
+                      selectedRole === 'owner' ? 'text-green-700 dark:text-purple-400' : 'text-gray-700 dark:text-gray-300'
                     }`}>
                       Business Owner
                     </span>
@@ -221,9 +221,9 @@ export default function SignupPage() {
               disabled={loading || !selectedRole}
               className={`w-full py-3 px-4 rounded-lg font-medium transition duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
                 selectedRole === 'customer'
-                  ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white focus:ring-orange-500'
+                  ? 'bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white focus:ring-blue-500 dark:from-orange-500 dark:to-red-500 dark:hover:from-orange-600 dark:hover:to-red-600 dark:focus:ring-orange-500'
                   : selectedRole === 'owner'
-                  ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white focus:ring-purple-500'
+                  ? 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white focus:ring-green-500 dark:from-purple-500 dark:to-indigo-500 dark:hover:from-purple-600 dark:hover:to-indigo-600 dark:focus:ring-purple-500'
                   : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
               }`}
             >
@@ -257,7 +257,7 @@ export default function SignupPage() {
           <div className="mt-4 text-center">
             <Link 
               href="/login" 
-              className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 font-medium transition duration-200"
+              className="text-blue-600 hover:text-blue-800 dark:text-orange-400 dark:hover:text-orange-300 font-medium transition duration-200"
             >
               Sign in instead →
             </Link>
