@@ -3,6 +3,131 @@ const Conversation = require('../models/conversation.model');
 const Message = require('../models/message.model');
 const User = require('../models/user.model');
 
+// Search users for starting conversations
+exports.searchUsers = async (req, res) => {
+  try {
+    const { q } = req.query;
+    const currentUserId = req.user.userId;
+    
+    if (!q || q.trim().length < 2) {
+      return res.json([]);
+    }
+    
+    const users = await User.find({
+      $and: [
+        { _id: { $ne: currentUserId } }, // Exclude current user
+        {
+          $or: [
+            { name: { $regex: q, $options: 'i' } },
+            { email: { $regex: q, $options: 'i' } }
+          ]
+        }
+      ]
+    })
+    .select('name email role')
+    .limit(10);
+    
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Start a new conversation
+exports.startConversation = async (req, res) => {
+  try {
+    const { participantId } = req.body;
+    const currentUserId = req.user.userId;
+    
+    // Check if conversation already exists between these users
+    const existingConversation = await Conversation.findOne({
+      participants: { $all: [currentUserId, participantId] },
+      $expr: { $eq: [{ $size: "$participants" }, 2] }
+    })
+    .populate('participants', 'name email role');
+    
+    if (existingConversation) {
+      return res.json(existingConversation);
+    }
+    
+    // Create new conversation
+    const conversation = await Conversation.create({
+      participants: [currentUserId, participantId]
+    });
+    
+    const populatedConversation = await Conversation.findById(conversation._id)
+      .populate('participants', 'name email role');
+    
+    res.status(201).json(populatedConversation);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Mark messages as read
+exports.markAsRead = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { conversationId } = req.params;
+    
+    // Verify user has access to this conversation
+    await verifyConversationAccess(userId, conversationId);
+    
+    // Find unread messages for this user
+    const unreadMessages = await Message.find({
+      conversationId,
+      'readBy.userId': { $ne: userId }
+    }).select('_id');
+    
+    if (unreadMessages.length > 0) {
+      // Mark messages as read
+      await Message.updateMany(
+        { 
+          conversationId,
+          'readBy.userId': { $ne: userId }
+        },
+        { 
+          $push: { readBy: { userId, readAt: new Date() } }
+        }
+      );
+      
+      // Emit read receipt to other participants
+      if (req.io) {
+        req.io.to(conversationId).emit('messagesRead', {
+          conversationId,
+          userId,
+          messageIds: unreadMessages.map(m => m._id),
+          readAt: new Date()
+        });
+      }
+    }
+    
+    res.json({ message: 'Messages marked as read', count: unreadMessages.length });
+  } catch (error) {
+    res.status(403).json({ message: error.message });
+  }
+};
+
+// Get unread message count
+exports.getUnreadCount = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { conversationId } = req.params;
+    
+    // Verify user has access to this conversation
+    await verifyConversationAccess(userId, conversationId);
+    
+    const unreadCount = await Message.countDocuments({
+      conversationId,
+      'readBy.userId': { $ne: userId }
+    });
+    
+    res.json({ unreadCount });
+  } catch (error) {
+    res.status(403).json({ message: error.message });
+  }
+};
+
 
 exports.getMessages = async (req, res) => {
   try {
@@ -47,7 +172,7 @@ const verifyConversationAccess = async (userId, conversationId) => {
 // Get user's conversations (only their own)
 exports.getUserConversations = async (req, res) => {
   try {
-    const userId = req.user.id; // From JWT token
+    const userId = req.user.userId; // From JWT token
     
     const conversations = await Conversation.find({
       participants: userId
@@ -55,9 +180,13 @@ exports.getUserConversations = async (req, res) => {
     .populate('participants', 'name email role')
     .populate({
       path: 'lastMessage',
-      select: 'text createdAt senderId'
+      select: 'text createdAt senderId',
+      populate: {
+        path: 'senderId',
+        select: 'name'
+      }
     })
-    .sort({ updatedAt: -1 });
+    .sort({ lastActivity: -1, updatedAt: -1 });
     
     res.json(conversations);
   } catch (error) {
@@ -68,7 +197,7 @@ exports.getUserConversations = async (req, res) => {
 // Get messages for a specific conversation (only if user is participant)
 exports.getConversationMessages = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { conversationId } = req.params;
     
     // Verify user has access to this conversation
@@ -87,7 +216,7 @@ exports.getConversationMessages = async (req, res) => {
 // Send message (only to conversations user is part of)
 exports.sendMessage = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { conversationId, text } = req.body;
     
     // Verify user has access to this conversation
@@ -100,17 +229,20 @@ exports.sendMessage = async (req, res) => {
       readBy: [{ userId, readAt: new Date() }] // Mark as read by sender
     });
     
-    // Update conversation's last message
+    // Update conversation's last message and activity
     await Conversation.findByIdAndUpdate(conversationId, {
       lastMessage: message._id,
+      lastActivity: new Date(),
       updatedAt: new Date()
     });
     
     const populatedMessage = await Message.findById(message._id)
       .populate('senderId', 'name email role');
     
-    // Emit to all participants in the conversation
-    req.io.to(conversationId).emit('newMessage', populatedMessage);
+    // Emit to all participants in the conversation (if socket is available)
+    if (req.io) {
+      req.io.to(conversationId).emit('newMessage', populatedMessage);
+    }
     
     res.json(populatedMessage);
   } catch (error) {
@@ -123,8 +255,12 @@ exports.setupSocket = (io) => {
   io.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth.token;
+      if (!token) {
+        throw new Error('No token provided');
+      }
+      
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findById(decoded.id);
+      const user = await User.findById(decoded.userId);
       
       if (!user) {
         throw new Error('User not found');
@@ -134,12 +270,13 @@ exports.setupSocket = (io) => {
       socket.user = user;
       next();
     } catch (error) {
+      console.error('Socket authentication error:', error.message);
       next(new Error('Authentication error'));
     }
   });
 
   io.on('connection', (socket) => {
-    console.log(`User ${socket.user.name} connected`);
+    console.log(`User ${socket.user.name} (${socket.user.role}) connected`);
     
     // Join user's conversations
     socket.on('joinConversations', async () => {
@@ -150,13 +287,42 @@ exports.setupSocket = (io) => {
         
         conversations.forEach(conv => {
           socket.join(conv._id.toString());
+          console.log(`User ${socket.user.name} joined conversation ${conv._id}`);
         });
+        
+        socket.emit('conversationsJoined', { count: conversations.length });
       } catch (error) {
         socket.emit('error', { message: 'Failed to join conversations' });
       }
     });
 
-    // Handle typing indicators (only for participants)
+    // Join specific conversation
+    socket.on('joinConversation', async (conversationId) => {
+      try {
+        await verifyConversationAccess(socket.userId, conversationId);
+        socket.join(conversationId);
+        console.log(`User ${socket.user.name} joined conversation ${conversationId}`);
+        
+        // Notify others that user is online in this conversation
+        socket.to(conversationId).emit('userOnline', {
+          userId: socket.userId,
+          userName: socket.user.name
+        });
+      } catch (error) {
+        socket.emit('error', { message: 'Access denied to conversation' });
+      }
+    });
+
+    // Leave conversation
+    socket.on('leaveConversation', (conversationId) => {
+      socket.leave(conversationId);
+      socket.to(conversationId).emit('userOffline', {
+        userId: socket.userId,
+        userName: socket.user.name
+      });
+    });
+
+    // Handle typing indicators
     socket.on('typing', async (data) => {
       try {
         const { conversationId, isTyping } = data;
@@ -167,14 +333,87 @@ exports.setupSocket = (io) => {
         socket.to(conversationId).emit('userTyping', {
           userId: socket.userId,
           userName: socket.user.name,
-          isTyping
+          isTyping,
+          timestamp: new Date()
         });
       } catch (error) {
         socket.emit('error', { message: 'Access denied' });
       }
     });
 
-    // Simple chat message handler for tests (persists using Message model)
+    // Handle real-time message sending
+    socket.on('sendMessage', async (data) => {
+      try {
+        const { conversationId, text } = data;
+        
+        // Verify access
+        await verifyConversationAccess(socket.userId, conversationId);
+        
+        const message = await Message.create({
+          conversationId,
+          senderId: socket.userId,
+          text,
+          readBy: [{ userId: socket.userId, readAt: new Date() }]
+        });
+        
+        // Update conversation's last message and activity
+        await Conversation.findByIdAndUpdate(conversationId, {
+          lastMessage: message._id,
+          lastActivity: new Date(),
+          updatedAt: new Date()
+        });
+        
+        const populatedMessage = await Message.findById(message._id)
+          .populate('senderId', 'name email role');
+        
+        // Emit to all participants in the conversation
+        io.to(conversationId).emit('newMessage', populatedMessage);
+        
+        // Send delivery confirmation to sender
+        socket.emit('messageDelivered', { 
+          messageId: message._id,
+          conversationId 
+        });
+        
+      } catch (error) {
+        socket.emit('error', { message: 'Failed to send message' });
+      }
+    });
+
+    // Handle message read receipts
+    socket.on('markMessageRead', async (data) => {
+      try {
+        const { conversationId, messageId } = data;
+        
+        // Verify access
+        await verifyConversationAccess(socket.userId, conversationId);
+        
+        // Mark message as read
+        await Message.findOneAndUpdate(
+          { 
+            _id: messageId,
+            conversationId,
+            'readBy.userId': { $ne: socket.userId }
+          },
+          { 
+            $push: { readBy: { userId: socket.userId, readAt: new Date() } }
+          }
+        );
+        
+        // Emit read receipt to other participants
+        socket.to(conversationId).emit('messageRead', {
+          messageId,
+          userId: socket.userId,
+          userName: socket.user.name,
+          readAt: new Date()
+        });
+        
+      } catch (error) {
+        socket.emit('error', { message: 'Failed to mark message as read' });
+      }
+    });
+
+    // Simple chat message handler for backward compatibility
     socket.on('chat message', async (text) => {
       try {
         // Ensure a conversation exists for this user (for test purposes)
@@ -198,6 +437,16 @@ exports.setupSocket = (io) => {
 
     socket.on('disconnect', () => {
       console.log(`User ${socket.user.name} disconnected`);
+      
+      // Notify all conversations that user is offline
+      socket.rooms.forEach(room => {
+        if (room !== socket.id) {
+          socket.to(room).emit('userOffline', {
+            userId: socket.userId,
+            userName: socket.user.name
+          });
+        }
+      });
     });
   });
 };
