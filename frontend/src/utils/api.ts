@@ -173,6 +173,47 @@ export const businessApi = {
     });
     return handleResponse<Business>(response);
   },
+
+  create: async (businessData: CreateBusinessRequest) => {
+    const formData = new FormData();
+    formData.append('name', businessData.name);
+    formData.append('description', businessData.description || '');
+    formData.append('categoryId', businessData.categoryId);
+    formData.append('locationId', businessData.locationId);
+
+    if (businessData.coverPhoto) {
+      formData.append('coverPhoto', businessData.coverPhoto);
+    }
+    if (businessData.profilePhoto) {
+      formData.append('profilePhoto', businessData.profilePhoto);
+    }
+
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${API_BASE_URL}/businesses`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+    return handleResponse<{ message: string; business: Business }>(response);
+  },
+
+  // Get categories
+  getCategories: async () => {
+    const response = await fetch(`${API_BASE_URL}/businesses/categories`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<Category[]>(response);
+  },
+
+  // Get locations
+  getLocations: async () => {
+    const response = await fetch(`${API_BASE_URL}/businesses/locations`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<Location[]>(response);
+  },
 };
 
 // Chat API
@@ -337,6 +378,8 @@ export interface Business {
   name: string;
   description?: string;
   isVerified: boolean;
+  coverPhoto?: string;
+  profilePhoto?: string;
   categoryId?: {
     _id: string;
     name: string;
@@ -497,4 +540,29 @@ export interface VerificationStatus {
   submittedAt: string;
   reviewedAt?: string;
   reviewedBy?: string;
+}
+
+// Additional types for business creation
+export interface CreateBusinessRequest {
+  name: string;
+  description?: string;
+  categoryId: string;
+  locationId: string;
+  coverPhoto?: File;
+  profilePhoto?: File;
+}
+
+export interface Category {
+  _id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Location {
+  _id: string;
+  name: string;
+  region?: string;
+  createdAt: string;
+  updatedAt: string;
 }

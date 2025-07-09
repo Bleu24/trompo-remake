@@ -61,15 +61,35 @@ async function seed() {
     ]);
 
     // Base lookup data
-    const [foodCategory, techCategory] = await Category.create([
-      { name: 'Food' },
+    const categories = await Category.create([
+      { name: 'Restaurant' },
+      { name: 'Retail' },
+      { name: 'Services' },
       { name: 'Technology' },
+      { name: 'Health & Wellness' },
+      { name: 'Education' },
+      { name: 'Entertainment' },
+      { name: 'Automotive' },
+      { name: 'Home & Garden' },
+      { name: 'Beauty & Personal Care' },
     ]);
 
-    const [manila, cebu] = await Location.create([
-      { name: 'Metro Manila' },
-      { name: 'Cebu' },
+    const locations = await Location.create([
+      { name: 'Manila', region: 'NCR' },
+      { name: 'Quezon City', region: 'NCR' },
+      { name: 'Makati', region: 'NCR' },
+      { name: 'Pasig', region: 'NCR' },
+      { name: 'Taguig', region: 'NCR' },
+      { name: 'Cebu City', region: 'Central Visayas' },
+      { name: 'Davao City', region: 'Davao Region' },
+      { name: 'Iloilo City', region: 'Western Visayas' },
+      { name: 'Cagayan de Oro', region: 'Northern Mindanao' },
+      { name: 'Zamboanga City', region: 'Zamboanga Peninsula' },
     ]);
+
+    // Get the first category (Restaurant) and location (Manila) for the demo business
+    const [foodCategory] = categories;
+    const [manila] = locations;
 
     // Admin user
     const admin = await User.create({
