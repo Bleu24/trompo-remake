@@ -239,6 +239,83 @@ export const chatApi = {
   },
 };
 
+// Business Owner API
+export const businessOwnerApi = {
+  // Get owner profile
+  getProfile: async () => {
+    const response = await fetch(`${API_BASE_URL}/owner/me`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<BusinessOwner>(response);
+  },
+
+  // Get owner's businesses
+  getMyBusinesses: async () => {
+    const response = await fetch(`${API_BASE_URL}/businesses/owner`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<Business[]>(response);
+  },
+
+  // Get business analytics/KPIs
+  getBusinessAnalytics: async (businessId?: string) => {
+    const url = businessId 
+      ? `${API_BASE_URL}/owner/analytics/${businessId}`
+      : `${API_BASE_URL}/owner/analytics`;
+    const response = await fetch(url, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<BusinessAnalytics>(response);
+  },
+
+  // Get owner products
+  getMyProducts: async () => {
+    const response = await fetch(`${API_BASE_URL}/owner/products`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<Product[]>(response);
+  },
+
+  // Get business transactions/sales
+  getBusinessTransactions: async (businessId?: string) => {
+    const url = businessId 
+      ? `${API_BASE_URL}/owner/transactions/${businessId}`
+      : `${API_BASE_URL}/owner/transactions`;
+    const response = await fetch(url, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<Transaction[]>(response);
+  },
+
+  // Request business verification
+  requestVerification: async (businessId: string, verificationData: VerificationRequest) => {
+    const formData = new FormData();
+    formData.append('businessId', businessId);
+    formData.append('personalId', verificationData.personalId);
+    formData.append('businessPermit', verificationData.businessPermit);
+    formData.append('notes', verificationData.notes || '');
+
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${API_BASE_URL}/owner/verification/request`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+        // Don't set Content-Type to let browser set it with boundary for FormData
+      },
+      body: formData,
+    });
+    return handleResponse<{ message: string; requestId: string }>(response);
+  },
+
+  // Get verification status
+  getVerificationStatus: async (businessId: string) => {
+    const response = await fetch(`${API_BASE_URL}/owner/verification/status/${businessId}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<VerificationStatus>(response);
+  },
+};
+
 // Types
 export interface Product {
   _id: string;
@@ -357,4 +434,67 @@ export interface ChatUser {
   name: string;
   email: string;
   role: string;
+}
+
+// Business Owner types
+export interface BusinessOwner {
+  _id: string;
+  userId: {
+    _id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BusinessAnalytics {
+  totalSales: number;
+  totalRevenue: number;
+  totalOrders: number;
+  recentSales: Transaction[];
+  topProducts: Array<{
+    product: Product;
+    totalSales: number;
+    totalRevenue: number;
+  }>;
+  salesOverTime: Array<{
+    date: string;
+    sales: number;
+    revenue: number;
+  }>;
+  pageViews: number;
+  uniqueVisitors: number;
+  conversionRate: number;
+  customerRetention: number;
+}
+
+export interface OwnerDashboardStats {
+  totalRevenue: number;
+  totalOrders: number;
+  activeProducts: number;
+  pageViews: number;
+  conversionRate: number;
+  averageOrderValue: number;
+}
+
+// Verification types
+export interface VerificationRequest {
+  personalId: File;
+  businessPermit: File;
+  notes?: string;
+}
+
+export interface VerificationStatus {
+  _id: string;
+  businessId: string;
+  status: 'pending' | 'approved' | 'rejected';
+  personalIdUrl?: string;
+  businessPermitUrl?: string;
+  notes?: string;
+  adminNotes?: string;
+  submittedAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
 }
