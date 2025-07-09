@@ -29,6 +29,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve static files for uploads
+app.use('/uploads', express.static('uploads'));
+
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/owner', require('./routes/businessOwner.routes'));
