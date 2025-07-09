@@ -1,19 +1,75 @@
 const Business = require('../models/business.model');
+const Category = require('../models/category.model');
+const Location = require('../models/location.model');
+const multer = require('multer');
+const path = require('path');
+
+// Configure multer for business photo uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/business/');
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 // Create a new business
 exports.createBusiness = async (req, res) => {
   try {
     const { name, description, categoryId, locationId } = req.body;
 
-    const business = new Business({
+    // Find the business owner document
+    const BusinessOwner = require('../models/businessOwner.model');
+    const owner = await BusinessOwner.findOne({ userId: req.user.userId });
+    if (!owner) {
+      return res.status(404).json({ message: 'Business owner not found' });
+    }
+
+    const businessData = {
       name,
       description,
-      ownerId: req.user.userId,
+      ownerId: owner._id,
       categoryId,
       locationId,
-    });
+    };
 
+    // Add photo URLs if files were uploaded
+    if (req.files) {
+      if (req.files.coverPhoto) {
+        businessData.coverPhoto = `/uploads/business/${req.files.coverPhoto[0].filename}`;
+      }
+      if (req.files.profilePhoto) {
+        businessData.profilePhoto = `/uploads/business/${req.files.profilePhoto[0].filename}`;
+      }
+    }
+
+    const business = new Business(businessData);
     await business.save();
+    
+    // Populate the response with related data
+    await business.populate('categoryId', 'name');
+    await business.populate('locationId', 'name');
+    
     res.status(201).json({ message: 'Business created', business });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
@@ -101,5 +157,31 @@ exports.searchBusinesses = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+// Get all categories
+exports.getCategories = async (req, res) => {
+  try {
+    const categories = await Category.find();
+    res.json(categories);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Get all locations
+exports.getLocations = async (req, res) => {
+  try {
+    const locations = await Location.find();
+    res.json(locations);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Export multer upload middleware for business photos
+exports.uploadBusinessPhotos = upload.fields([
+  { name: 'coverPhoto', maxCount: 1 },
+  { name: 'profilePhoto', maxCount: 1 }
+]);
 
 
