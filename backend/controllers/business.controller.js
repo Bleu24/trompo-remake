@@ -51,15 +51,51 @@ exports.getBusinessById = async (req, res) => {
   }
 };
 
-// Search businesses by name (wildcard)
-exports.searchBusinesses = async (req, res) => {
+// Get all businesses by owner
+exports.getBusinessesByOwner = async (req, res) => {
   try {
-    const term = req.query.q || '';
-    const regex = new RegExp(term, 'i');
-    const businesses = await Business.find({ name: { $regex: regex } })
-      .populate('ownerId', 'name')
+    const BusinessOwner = require('../models/businessOwner.model');
+    
+    // Find the business owner document
+    const owner = await BusinessOwner.findOne({ userId: req.user.userId });
+    if (!owner) return res.status(404).json({ message: 'Business owner not found' });
+
+    const businesses = await Business.find({ ownerId: owner._id })
       .populate('categoryId', 'name')
       .populate('locationId', 'name');
+    
+    res.json(businesses);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Search businesses
+exports.searchBusinesses = async (req, res) => {
+  try {
+    const { q, location, category } = req.query;
+    let searchCriteria = {};
+
+    if (q) {
+      searchCriteria.$or = [
+        { name: { $regex: q, $options: 'i' } },
+        { description: { $regex: q, $options: 'i' } },
+      ];
+    }
+
+    if (location) {
+      searchCriteria.locationId = location;
+    }
+
+    if (category) {
+      searchCriteria.categoryId = category;
+    }
+
+    const businesses = await Business.find(searchCriteria)
+      .populate('categoryId', 'name')
+      .populate('locationId', 'name')
+      .populate('ownerId', 'userId');
+
     res.json(businesses);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
