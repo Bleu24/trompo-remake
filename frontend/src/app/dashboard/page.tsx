@@ -822,7 +822,7 @@ function BusinessOwnerDashboard({ stats, analytics, businesses, products, transa
                       Location: {business.locationId?.name || 'N/A'}
                     </p>
                   </div>
-                  <Link href={`/dashboard/business/${business._id}`} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                  <Link href={`/manage/business/${business._id}`} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
                     Manage
                   </Link>
                 </div>
