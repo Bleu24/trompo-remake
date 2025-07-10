@@ -184,4 +184,53 @@ exports.uploadBusinessPhotos = upload.fields([
   { name: 'profilePhoto', maxCount: 1 }
 ]);
 
+// Update a business
+exports.updateBusiness = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, categoryId, locationId } = req.body;
+
+    // Find the business and check ownership
+    const business = await Business.findById(id);
+    if (!business) {
+      return res.status(404).json({ message: 'Business not found' });
+    }
+
+    // Find the business owner document to verify ownership
+    const BusinessOwner = require('../models/businessOwner.model');
+    const owner = await BusinessOwner.findOne({ userId: req.user.userId });
+    if (!owner || business.ownerId.toString() !== owner._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this business' });
+    }
+
+    // Update business data
+    const updateData = {
+      name,
+      description,
+      categoryId,
+      locationId,
+    };
+
+    // Add photo URLs if files were uploaded
+    if (req.files) {
+      if (req.files.coverPhoto) {
+        updateData.coverPhoto = `/uploads/business/${req.files.coverPhoto[0].filename}`;
+      }
+      if (req.files.profilePhoto) {
+        updateData.profilePhoto = `/uploads/business/${req.files.profilePhoto[0].filename}`;
+      }
+    }
+
+    const updatedBusiness = await Business.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    ).populate('categoryId', 'name').populate('locationId', 'name');
+    
+    res.json({ message: 'Business updated successfully', business: updatedBusiness });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 
