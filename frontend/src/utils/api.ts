@@ -45,6 +45,80 @@ export const productApi = {
     return handleResponse<Product>(response);
   },
 
+  getByBusiness: async (businessId: string) => {
+    const response = await fetch(`${API_BASE_URL}/businesses/${businessId}/products`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<Product[]>(response);
+  },
+
+  create: async (productData: any) => {
+    const formData = new FormData();
+    formData.append('title', productData.title);
+    formData.append('description', productData.description || '');
+    formData.append('price', productData.price.toString());
+    formData.append('categoryId', productData.categoryId);
+    formData.append('type', productData.type);
+    formData.append('businessId', productData.businessId);
+    
+    if (productData.inventory !== undefined) {
+      formData.append('inventory', productData.inventory.toString());
+    }
+
+    if (productData.images && productData.images.length > 0) {
+      productData.images.forEach((image: File) => {
+        formData.append('images', image);
+      });
+    }
+
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${API_BASE_URL}/products`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+    return handleResponse<{ product: Product }>(response);
+  },
+
+  update: async (id: string, productData: any) => {
+    const formData = new FormData();
+    formData.append('title', productData.title);
+    formData.append('description', productData.description || '');
+    formData.append('price', productData.price.toString());
+    formData.append('categoryId', productData.categoryId);
+    formData.append('type', productData.type);
+    
+    if (productData.inventory !== undefined) {
+      formData.append('inventory', productData.inventory.toString());
+    }
+
+    if (productData.images && productData.images.length > 0) {
+      productData.images.forEach((image: File) => {
+        formData.append('images', image);
+      });
+    }
+
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+      method: 'PUT',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+    return handleResponse<{ product: Product }>(response);
+  },
+
+  delete: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<{ message: string }>(response);
+  },
+
   search: async (query: string) => {
     const response = await fetch(`${API_BASE_URL}/products/search?q=${encodeURIComponent(query)}`, {
       headers: getAuthHeaders(),
@@ -191,6 +265,31 @@ export const businessApi = {
     const token = localStorage.getItem('authToken');
     const response = await fetch(`${API_BASE_URL}/businesses`, {
       method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+    return handleResponse<{ message: string; business: Business }>(response);
+  },
+
+  update: async (businessId: string, businessData: UpdateBusinessRequest) => {
+    const formData = new FormData();
+    formData.append('name', businessData.name);
+    formData.append('description', businessData.description || '');
+    formData.append('categoryId', businessData.categoryId);
+    formData.append('locationId', businessData.locationId);
+
+    if (businessData.coverPhoto) {
+      formData.append('coverPhoto', businessData.coverPhoto);
+    }
+    if (businessData.profilePhoto) {
+      formData.append('profilePhoto', businessData.profilePhoto);
+    }
+
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${API_BASE_URL}/businesses/${businessId}`, {
+      method: 'PUT',
       headers: {
         ...(token && { Authorization: `Bearer ${token}` }),
       },
@@ -365,10 +464,15 @@ export interface Product {
     name: string;
   };
   title: string;
-  description: string;
+  description?: string;
   type: 'product' | 'service';
   price: number;
+  categoryId: {
+    _id: string;
+    name: string;
+  } | string;
   inventory?: number;
+  images?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -544,6 +648,15 @@ export interface VerificationStatus {
 
 // Additional types for business creation
 export interface CreateBusinessRequest {
+  name: string;
+  description?: string;
+  categoryId: string;
+  locationId: string;
+  coverPhoto?: File;
+  profilePhoto?: File;
+}
+
+export interface UpdateBusinessRequest {
   name: string;
   description?: string;
   categoryId: string;
