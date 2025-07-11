@@ -13,12 +13,47 @@ interface ApiResponse<T> {
   error?: string;
 }
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('authToken');
-  return {
+const getAuthHeaders = (): Record<string, string> => {
+  const authData = localStorage.getItem('authToken');
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
   };
+  
+  if (authData) {
+    let token: string;
+    try {
+      // Check if it's a JSON object (from profile update) or just a token string
+      const parsed = JSON.parse(authData);
+      token = parsed.token || authData; // If it's an object, get the token property
+    } catch {
+      // If parsing fails, it's just a token string
+      token = authData;
+    }
+    headers.Authorization = `Bearer ${token}`;
+  }
+  
+  return headers;
+};
+
+// Helper function to extract token for FormData requests (no Content-Type header)
+const getAuthHeadersForFormData = (): Record<string, string> => {
+  const authData = localStorage.getItem('authToken');
+  const headers: Record<string, string> = {};
+  
+  if (authData) {
+    let token: string;
+    try {
+      // Check if it's a JSON object (from profile update) or just a token string
+      const parsed = JSON.parse(authData);
+      token = parsed.token || authData; // If it's an object, get the token property
+    } catch {
+      // If parsing fails, it's just a token string
+      token = authData;
+    }
+    headers.Authorization = `Bearer ${token}`;
+  }
+  
+  return headers;
 };
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
@@ -71,12 +106,9 @@ export const productApi = {
       });
     }
 
-    const token = localStorage.getItem('authToken');
     const response = await fetch(`${API_BASE_URL}/products`, {
       method: 'POST',
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     return handleResponse<{ product: Product }>(response);
@@ -100,12 +132,9 @@ export const productApi = {
       });
     }
 
-    const token = localStorage.getItem('authToken');
     const response = await fetch(`${API_BASE_URL}/products/${id}`, {
       method: 'PUT',
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     return handleResponse<{ product: Product }>(response);
@@ -195,6 +224,15 @@ export const transactionApi = {
     });
     return handleResponse<Transaction>(response);
   },
+
+  updateStatus: async (id: string, status: 'pending' | 'completed' | 'cancelled') => {
+    const response = await fetch(`${API_BASE_URL}/transactions/${id}/status`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ status }),
+    });
+    return handleResponse<Transaction>(response);
+  },
 };
 
 // Search API
@@ -262,12 +300,9 @@ export const businessApi = {
       formData.append('profilePhoto', businessData.profilePhoto);
     }
 
-    const token = localStorage.getItem('authToken');
     const response = await fetch(`${API_BASE_URL}/businesses`, {
       method: 'POST',
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     return handleResponse<{ message: string; business: Business }>(response);
@@ -287,12 +322,17 @@ export const businessApi = {
       formData.append('profilePhoto', businessData.profilePhoto);
     }
 
-    const token = localStorage.getItem('authToken');
+    // Handle photo deletion flags
+    if (businessData.deleteCoverPhoto) {
+      formData.append('deleteCoverPhoto', 'true');
+    }
+    if (businessData.deleteProfilePhoto) {
+      formData.append('deleteProfilePhoto', 'true');
+    }
+
     const response = await fetch(`${API_BASE_URL}/businesses/${businessId}`, {
       method: 'PUT',
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     return handleResponse<{ message: string; business: Business }>(response);
@@ -435,13 +475,9 @@ export const businessOwnerApi = {
     formData.append('businessPermit', verificationData.businessPermit);
     formData.append('notes', verificationData.notes || '');
 
-    const token = localStorage.getItem('authToken');
     const response = await fetch(`${API_BASE_URL}/owner/verification/request`, {
       method: 'POST',
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-        // Don't set Content-Type to let browser set it with boundary for FormData
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     return handleResponse<{ message: string; requestId: string }>(response);
@@ -510,7 +546,16 @@ export interface SavedBusiness {
 
 export interface Transaction {
   _id: string;
-  customerId: string;
+  customerId: {
+    _id: string;
+    userId: {
+      _id: string;
+      name?: string;
+      email: string;
+    };
+    address?: string;
+    phone?: string;
+  } | string;
   businessId: {
     _id: string;
     name: string;
@@ -663,6 +708,8 @@ export interface UpdateBusinessRequest {
   locationId: string;
   coverPhoto?: File;
   profilePhoto?: File;
+  deleteCoverPhoto?: boolean;
+  deleteProfilePhoto?: boolean;
 }
 
 export interface Category {
@@ -679,3 +726,52 @@ export interface Location {
   createdAt: string;
   updatedAt: string;
 }
+
+// User profile types
+export interface UpdateProfileRequest {
+  name?: string;
+  email?: string;
+  profilePicture?: File;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+// User API
+export const userApi = {
+  // Update profile
+  updateProfile: async (profileData: UpdateProfileRequest) => {
+    const formData = new FormData();
+    if (profileData.name) formData.append('name', profileData.name);
+    if (profileData.email) formData.append('email', profileData.email);
+    if (profileData.profilePicture) formData.append('profilePicture', profileData.profilePicture);
+
+    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      method: 'PUT',
+      headers: getAuthHeadersForFormData(),
+      body: formData,
+    });
+    return handleResponse<{ message: string; user: any }>(response);
+  },
+
+  // Change password
+  changePassword: async (passwordData: ChangePasswordRequest) => {
+    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(passwordData),
+    });
+    return handleResponse<{ message: string }>(response);
+  },
+
+  // Delete account
+  deleteAccount: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/delete-account`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<{ message: string }>(response);
+  },
+};
