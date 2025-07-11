@@ -93,6 +93,8 @@ exports.createProduct = async (req, res) => {
 
     // Handle uploaded images
     const images = req.files ? req.files.map(file => file.filename) : [];
+    console.log('Product creation - uploaded files:', req.files?.map(f => f.filename));
+    console.log('Product creation - images array:', images);
 
     const product = new Sellable({
       businessId,
@@ -106,6 +108,7 @@ exports.createProduct = async (req, res) => {
     });
 
     await product.save();
+    console.log('Product saved with images:', product.images);
     
     const populatedProduct = await Sellable.findById(product._id)
       .populate('businessId', 'name')
@@ -113,6 +116,7 @@ exports.createProduct = async (req, res) => {
 
     res.status(201).json({ message: 'Product created', product: populatedProduct });
   } catch (err) {
+    console.error('Product creation error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
