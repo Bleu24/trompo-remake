@@ -182,13 +182,15 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl backdrop-blur-sm bg-opacity-80 dark:bg-opacity-90 border border-gray-200 dark:border-gray-700 p-8">
-            {/* Header */}
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 dark:from-orange-600 dark:to-red-600 bg-clip-text text-transparent mb-4">
-                {userRole === 'owner' ? 'Business Owner Dashboard' : 'Customer Dashboard'}
+                {userRole === 'owner' ? 'Business Owner Global Dashboard' : 'Customer Dashboard'}
               </h1>
               <p className="text-gray-600 dark:text-gray-300 text-lg">
-                Welcome back, {user?.name || (userRole === 'owner' ? 'Business Owner' : 'Customer')}!
+                {userRole === 'owner' 
+                  ? `Welcome back, ${user?.name || 'Business Owner'}! Overview of all your businesses.`
+                  : `Welcome back, ${user?.name || 'Customer'}!`
+                }
               </p>
             </div>
 
@@ -438,9 +440,9 @@ function CustomerDashboard({ stats, savedItems, recentTransactions }: {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Recent Orders</h2>
-            <button className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+            <Link href="/dashboard/orders" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
               View All
-            </button>
+            </Link>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="overflow-x-auto">
@@ -553,13 +555,61 @@ function BusinessOwnerDashboard({ stats, analytics, businesses, products, transa
 
   return (
     <>
+      {/* Global KPIs Header */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          Global Business Performance
+        </h2>
+        <p className="text-gray-600 dark:text-gray-300">
+          Key metrics aggregated across all your {businesses.length} business{businesses.length !== 1 ? 'es' : ''}
+        </p>
+      </div>
+
+      {/* Business Summary Card */}
+      <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-xl p-6 mb-6 border border-blue-200 dark:border-blue-800">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+              {businesses.length}
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              Total Businesses
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+              {businesses.filter(b => b.isVerified).length}
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              Verified Businesses
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+              {stats.activeProducts}
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              Total Products
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
+              ₱{stats.totalRevenue.toLocaleString()}
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              Total Revenue
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Interactive KPI Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <InteractiveChart
           title="Total Revenue"
           data={revenueData}
           value={`₱${stats.totalRevenue.toLocaleString()}`}
-          description="Total Revenue"
+          description="Across All Businesses"
           color="#10b981"
           colorClasses="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
           icon={
@@ -573,7 +623,7 @@ function BusinessOwnerDashboard({ stats, analytics, businesses, products, transa
           title="Total Orders"
           data={ordersData}
           value={stats.totalOrders}
-          description="Total Orders"
+          description="Across All Businesses"
           color="#3b82f6"
           colorClasses="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
           icon={
@@ -587,7 +637,7 @@ function BusinessOwnerDashboard({ stats, analytics, businesses, products, transa
           title="Active Products"
           data={productData}
           value={stats.activeProducts}
-          description="Active Products"
+          description="Across All Businesses"
           color="#8b5cf6"
           colorClasses="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
           icon={
@@ -601,7 +651,7 @@ function BusinessOwnerDashboard({ stats, analytics, businesses, products, transa
           title="Page Views"
           data={pageViewsData}
           value={stats.pageViews.toLocaleString()}
-          description="Page Views"
+          description="Across All Businesses"
           color="#f59e0b"
           colorClasses="bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
           icon={
@@ -616,7 +666,7 @@ function BusinessOwnerDashboard({ stats, analytics, businesses, products, transa
           title="Conversion Rate"
           data={conversionData}
           value={`${stats.conversionRate.toFixed(1)}%`}
-          description="Conversion Rate"
+          description="Across All Businesses"
           color="#6366f1"
           colorClasses="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
           icon={
@@ -630,7 +680,7 @@ function BusinessOwnerDashboard({ stats, analytics, businesses, products, transa
           title="Average Order Value"
           data={orderValueData}
           value={`₱${stats.averageOrderValue.toLocaleString()}`}
-          description="Avg Order Value"
+          description="Across All Businesses"
           color="#ec4899"
           colorClasses="bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400"
           icon={
@@ -643,7 +693,7 @@ function BusinessOwnerDashboard({ stats, analytics, businesses, products, transa
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Link href="/dashboard/products" className="feature-card hover:scale-105 transition-transform">
+        <Link href={businesses.length > 0 ? `/manage/business/${businesses[0]._id}/products` : '/dashboard/create-business'} className="feature-card hover:scale-105 transition-transform">
           <div className="feature-icon bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -670,32 +720,36 @@ function BusinessOwnerDashboard({ stats, analytics, businesses, products, transa
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Analytics</h3>
         </Link>
 
-        {businesses.length > 0 ? (
-          <Link href={`/manage/business/${businesses[0]._id}`} className="feature-card hover:scale-105 transition-transform">
+        {businesses.length > 0 && (
+          <Link href="/dashboard/manage-businesses" className="feature-card hover:scale-105 transition-transform">
             <div className="feature-icon bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Manage Business</h3>
-          </Link>
-        ) : (
-          <Link href="/dashboard/create-business" className="feature-card hover:scale-105 transition-transform">
-            <div className="feature-icon bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Create Business</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {businesses.length === 1 ? 'Manage Business' : 'Manage Businesses'}
+            </h3>
           </Link>
         )}
+
+        <Link href="/dashboard/create-business" className="feature-card hover:scale-105 transition-transform">
+          <div className="feature-icon bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {businesses.length > 0 ? 'Add Another Business' : 'Create Your First Business'}
+          </h3>
+        </Link>
       </div>
 
       {/* Recent Sales */}
       {transactions.length > 0 && (
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Recent Sales</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Recent Sales (All Businesses)</h2>
             <Link href="/dashboard/orders" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
               View All
             </Link>
@@ -729,8 +783,8 @@ function BusinessOwnerDashboard({ stats, analytics, businesses, products, transa
                         {typeof transaction.sellableId === 'object' ? transaction.sellableId?.title : 'N/A'}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                        {typeof transaction.customerId === 'object' ? 
-                          (transaction.customerId as any)?.name || 'N/A' : 'N/A'}
+                        {typeof transaction.customerId === 'object' && transaction.customerId?.userId ? 
+                          transaction.customerId.userId.name || transaction.customerId.userId.email || 'N/A' : 'N/A'}
                       </td>
                       <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
                         ₱{transaction.amount.toLocaleString()}
@@ -761,7 +815,7 @@ function BusinessOwnerDashboard({ stats, analytics, businesses, products, transa
       {/* Top Products */}
       {analytics?.topProducts && analytics.topProducts.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Top Performing Products</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Top Performing Products (All Businesses)</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {analytics.topProducts.slice(0, 6).map((item, index) => (
               <div key={item.product._id} className="feature-card">
