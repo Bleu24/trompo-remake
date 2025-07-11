@@ -29,9 +29,8 @@ exports.globalSearch = async (req, res) => {
     const searchConditions = {};
     if (q) {
       searchConditions.$or = [
-        { name: { $regex: q, $options: 'i' } },
-        { description: { $regex: q, $options: 'i' } },
-        { title: { $regex: q, $options: 'i' } }
+        { title: { $regex: q, $options: 'i' } }, // For products/services
+        { description: { $regex: q, $options: 'i' } }
       ];
     }
 
@@ -67,8 +66,16 @@ exports.globalSearch = async (req, res) => {
 
     // Search businesses
     if (type === 'business' || type === 'all') {
+      const businessSearchConditions = {};
+      if (q) {
+        businessSearchConditions.$or = [
+          { name: { $regex: q, $options: 'i' } },
+          { description: { $regex: q, $options: 'i' } }
+        ];
+      }
+
       const businessQuery = {
-        ...searchConditions,
+        ...businessSearchConditions,
         ...locationFilter,
         ...categoryFilter,
         isVerified: true
@@ -131,7 +138,9 @@ exports.globalSearch = async (req, res) => {
 
       const filteredSellables = sellables.filter(sellable => {
         const business = sellable.businessId;
-        if (!business || !business.isVerified) return false;
+        if (!business) return false;
+        // Keep verification requirement for production
+        if (!business.isVerified) return false;
         if (locationFilter.locationId &&
             (!business.locationId ||
               business.locationId._id.toString() !== locationFilter.locationId.toString())) {
