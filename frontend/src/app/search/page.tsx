@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { searchApi, type SearchResults, type Business, type Product } from '@/utils/api';
+import { searchApi, productApi, businessApi, type SearchResults, type Business, type Product } from '@/utils/api';
 
 interface SearchFilters {
   type: 'all' | 'business' | 'product' | 'service';
@@ -56,19 +56,123 @@ function SearchPageContent() {
       
       console.log('Performing search with:', { query, filters: currentFilters });
       
-      const response = await searchApi.globalSearch({
-        q: query || undefined,
-        type: currentFilters.type === 'all' ? 'all' : currentFilters.type,
-        location: currentFilters.location || undefined,
-        category: currentFilters.category || undefined,
-        priceMin: currentFilters.priceMin || undefined,
-        priceMax: currentFilters.priceMax || undefined,
-        sortBy: currentFilters.sortBy,
-        limit: 50
-      });
+      // Use the same approach as products page - get all products and filter client-side
+      const allProducts = await productApi.getAll();
+      const allBusinesses = await businessApi.getAll();
       
-      console.log('Search response:', response);
-      setResults(response);
+      // Filter products based on search query (same logic as products page)
+      let filteredProducts = allProducts;
+      let filteredBusinesses = allBusinesses;
+      
+      if (query.trim() !== '') {
+        // Filter products
+        filteredProducts = allProducts.filter(product =>
+          product.title.toLowerCase().includes(query.toLowerCase()) ||
+          product.description?.toLowerCase().includes(query.toLowerCase()) ||
+          product.businessId.name.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        // Filter businesses
+        filteredBusinesses = allBusinesses.filter(business =>
+          business.name.toLowerCase().includes(query.toLowerCase()) ||
+          business.description?.toLowerCase().includes(query.toLowerCase())
+        );
+      }
+      
+      // Separate products and services
+      const products = filteredProducts.filter(p => p.type === 'product');
+      const services = filteredProducts.filter(p => p.type === 'service');
+      
+      // Apply type filter
+      let finalProducts = products;
+      let finalServices = services;
+      let finalBusinesses = filteredBusinesses;
+      
+      if (currentFilters.type === 'product') {
+        finalServices = [];
+        finalBusinesses = [];
+      } else if (currentFilters.type === 'service') {
+        finalProducts = [];
+        finalBusinesses = [];
+      } else if (currentFilters.type === 'business') {
+        finalProducts = [];
+        finalServices = [];
+      }
+      
+      // Apply price filter
+      if (currentFilters.priceMin || currentFilters.priceMax) {
+        const minPrice = currentFilters.priceMin ? parseFloat(currentFilters.priceMin) : 0;
+        const maxPrice = currentFilters.priceMax ? parseFloat(currentFilters.priceMax) : Infinity;
+        
+        finalProducts = finalProducts.filter(p => p.price >= minPrice && p.price <= maxPrice);
+        finalServices = finalServices.filter(p => p.price >= minPrice && p.price <= maxPrice);
+      }
+      
+      // Apply location filter (simplified - just check business name for now)
+      if (currentFilters.location) {
+        const locationFilter = currentFilters.location.toLowerCase();
+        finalProducts = finalProducts.filter(p => 
+          p.businessId.name.toLowerCase().includes(locationFilter)
+        );
+        finalServices = finalServices.filter(p => 
+          p.businessId.name.toLowerCase().includes(locationFilter)
+        );
+        finalBusinesses = finalBusinesses.filter(b => 
+          b.name.toLowerCase().includes(locationFilter)
+        );
+      }
+      
+      // Apply category filter (simplified - check if categoryId is an object with name)
+      if (currentFilters.category) {
+        const categoryFilter = currentFilters.category.toLowerCase();
+        finalProducts = finalProducts.filter(p => {
+          const productCategoryName = typeof p.categoryId === 'object' ? p.categoryId.name : '';
+          return productCategoryName.toLowerCase().includes(categoryFilter);
+        });
+        finalServices = finalServices.filter(p => {
+          const serviceCategoryName = typeof p.categoryId === 'object' ? p.categoryId.name : '';
+          return serviceCategoryName.toLowerCase().includes(categoryFilter);
+        });
+        finalBusinesses = finalBusinesses.filter(b => {
+          const businessCategoryName = typeof b.categoryId === 'object' ? b.categoryId.name : '';
+          return businessCategoryName.toLowerCase().includes(categoryFilter);
+        });
+      }
+      
+      // Apply sorting
+      const sortProducts = (items: Product[]) => {
+        switch (currentFilters.sortBy) {
+          case 'price':
+            return [...items].sort((a, b) => a.price - b.price);
+          case 'newest':
+            return [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          default:
+            return items;
+        }
+      };
+      
+      const sortBusinesses = (items: Business[]) => {
+        switch (currentFilters.sortBy) {
+          case 'newest':
+            return [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          default:
+            return items;
+        }
+      };
+      
+      finalProducts = sortProducts(finalProducts);
+      finalServices = sortProducts(finalServices);
+      finalBusinesses = sortBusinesses(finalBusinesses);
+      
+      const searchResults: SearchResults = {
+        businesses: finalBusinesses,
+        products: finalProducts,
+        services: finalServices,
+        totalResults: finalProducts.length + finalServices.length + finalBusinesses.length
+      };
+      
+      console.log('Search results:', searchResults);
+      setResults(searchResults);
     } catch (error: any) {
       console.error('Search failed:', error);
       setError(error.message || 'Search failed');
@@ -337,9 +441,27 @@ function ProductResults({ products, title }: { products: Product[]; title: strin
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((product) => (
-          <div key={product._id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
+          <div key={product._id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+            {/* Product Image */}
+            <div className="aspect-video bg-gray-200 dark:bg-gray-600 overflow-hidden">
+              {product.images && product.images.length > 0 ? (
+                <img
+                  src={`http://localhost:5000/uploads/${product.images[0]}`}
+                  alt={product.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            
+            {/* Product Info */}
+            <div className="p-6">
+              <div className="mb-4">
                 <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                   {product.title}
                 </h4>
@@ -352,39 +474,32 @@ function ProductResults({ products, title }: { products: Product[]; title: strin
                   </p>
                 )}
               </div>
-              <div className="ml-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-green-100 dark:from-blue-900/30 dark:to-green-900/30 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                  </svg>
-                </div>
+              
+              {product.inventory !== undefined && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  {product.inventory > 0 
+                    ? `${product.inventory} in stock` 
+                    : 'Out of stock'
+                  }
+                </p>
+              )}
+              
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  ₱{product.price.toLocaleString()}
+                </span>
+                <button 
+                  onClick={() => router.push(`/view/${product.type}/${product._id}`)}
+                  disabled={product.inventory === 0}
+                  className={`px-4 py-2 rounded-lg transition-colors font-medium ${
+                    product.inventory === 0
+                      ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
+                  }`}
+                >
+                  {product.inventory === 0 ? 'Out of Stock' : 'View Details'}
+                </button>
               </div>
-            </div>
-            
-            {product.inventory !== undefined && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                {product.inventory > 0 
-                  ? `${product.inventory} in stock` 
-                  : 'Out of stock'
-                }
-              </p>
-            )}
-            
-            <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                ₱{product.price.toLocaleString()}
-              </span>
-              <button 
-                onClick={() => router.push(`/view/${product.type}/${product._id}`)}
-                disabled={product.inventory === 0}
-                className={`px-4 py-2 rounded-lg transition-colors font-medium ${
-                  product.inventory === 0
-                    ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
-                }`}
-              >
-                {product.inventory === 0 ? 'Out of Stock' : 'View Details'}
-              </button>
             </div>
           </div>
         ))}
