@@ -47,6 +47,8 @@ export default function ManageBusinessPage() {
   const [newProfilePhoto, setNewProfilePhoto] = useState<File | null>(null);
   const [coverPhotoPreview, setCoverPhotoPreview] = useState<string | null>(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
+  const [deleteCoverPhoto, setDeleteCoverPhoto] = useState(false);
+  const [deleteProfilePhoto, setDeleteProfilePhoto] = useState(false);
 
   useEffect(() => {
     if (businessId) {
@@ -111,6 +113,8 @@ export default function ManageBusinessPage() {
     setEditError(null);
     setNewCoverPhoto(null);
     setNewProfilePhoto(null);
+    setDeleteCoverPhoto(false);
+    setDeleteProfilePhoto(false);
     loadEditFormData();
   };
 
@@ -130,19 +134,24 @@ export default function ManageBusinessPage() {
         if (type === 'cover') {
           setNewCoverPhoto(file);
           setCoverPhotoPreview(result);
+          setDeleteCoverPhoto(false);
         } else {
           setNewProfilePhoto(file);
           setProfilePhotoPreview(result);
+          setDeleteProfilePhoto(false);
         }
       };
       reader.readAsDataURL(file);
     } else {
+      // User clicked delete button
       if (type === 'cover') {
         setNewCoverPhoto(null);
-        setCoverPhotoPreview(business?.coverPhoto || null);
+        setCoverPhotoPreview(null);
+        setDeleteCoverPhoto(true);
       } else {
         setNewProfilePhoto(null);
-        setProfilePhotoPreview(business?.profilePhoto || null);
+        setProfilePhotoPreview(null);
+        setDeleteProfilePhoto(true);
       }
     }
   };
@@ -158,6 +167,8 @@ export default function ManageBusinessPage() {
         ...editFormData,
         coverPhoto: newCoverPhoto || undefined,
         profilePhoto: newProfilePhoto || undefined,
+        deleteCoverPhoto: deleteCoverPhoto,
+        deleteProfilePhoto: deleteProfilePhoto,
       };
 
       const response = await businessApi.update(businessId, updateData);
@@ -270,7 +281,7 @@ export default function ManageBusinessPage() {
               <div className="relative h-48 bg-gradient-to-r from-blue-500 to-purple-600">
                 {business.coverPhoto ? (
                   <Image
-                    src={`http://localhost:5000/uploads/${business.coverPhoto}`}
+                    src={`http://localhost:5000${business.coverPhoto}`}
                     alt={`${business.name} cover`}
                     fill
                     className="object-cover"
@@ -294,7 +305,7 @@ export default function ManageBusinessPage() {
                     {business.profilePhoto ? (
                       <div className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
                         <Image
-                          src={`http://localhost:5000/uploads/${business.profilePhoto}`}
+                          src={`http://localhost:5000${business.profilePhoto}`}
                           alt={`${business.name} profile`}
                           width={128}
                           height={128}
@@ -502,7 +513,7 @@ export default function ManageBusinessPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
                       </div>
-                      <span className="font-medium text-gray-900 dark:text-white">View Analytics</span>
+                      <span className="font-medium text-gray-900 dark:text-white">Business Analytics</span>
                     </div>
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -655,10 +666,10 @@ export default function ManageBusinessPage() {
                   </p>
                   
                   <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6">
-                    {coverPhotoPreview ? (
+                    {coverPhotoPreview && !deleteCoverPhoto ? (
                       <div className="relative">
                         <Image
-                          src={coverPhotoPreview}
+                          src={coverPhotoPreview.startsWith('data:') ? coverPhotoPreview : `http://localhost:5000${coverPhotoPreview}`}
                           alt="Cover photo preview"
                           width={400}
                           height={200}
@@ -676,6 +687,13 @@ export default function ManageBusinessPage() {
                       </div>
                     ) : (
                       <div className="text-center">
+                        {deleteCoverPhoto && (
+                          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+                            <p className="text-red-600 dark:text-red-400 text-sm font-medium">
+                              Cover photo will be removed when you save
+                            </p>
+                          </div>
+                        )}
                         <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                           <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
@@ -712,10 +730,10 @@ export default function ManageBusinessPage() {
                   </p>
                   
                   <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6">
-                    {profilePhotoPreview ? (
+                    {profilePhotoPreview && !deleteProfilePhoto ? (
                       <div className="relative inline-block">
                         <Image
-                          src={profilePhotoPreview}
+                          src={profilePhotoPreview.startsWith('data:') ? profilePhotoPreview : `http://localhost:5000${profilePhotoPreview}`}
                           alt="Profile photo preview"
                           width={150}
                           height={150}
@@ -733,6 +751,13 @@ export default function ManageBusinessPage() {
                       </div>
                     ) : (
                       <div className="text-center">
+                        {deleteProfilePhoto && (
+                          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+                            <p className="text-red-600 dark:text-red-400 text-sm font-medium">
+                              Profile photo will be removed when you save
+                            </p>
+                          </div>
+                        )}
                         <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                           <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
