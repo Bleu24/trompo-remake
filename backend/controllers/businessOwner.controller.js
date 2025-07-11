@@ -191,7 +191,13 @@ exports.getOwnerTransactions = async (req, res) => {
     })
     .populate('businessId', 'name')
     .populate('sellableId', 'title price')
-    .populate('customerId')
+    .populate({
+      path: 'customerId',
+      populate: {
+        path: 'userId',
+        select: 'name email'
+      }
+    })
     .sort({ createdAt: -1 });
 
     res.json(transactions);
@@ -292,6 +298,104 @@ exports.getBusinessAnalytics = async (req, res) => {
   }
 };
 
+// Get analytics for a specific business
+exports.getSpecificBusinessAnalytics = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    const Transaction = require('../models/transaction.model');
+    const owner = await findOwner(req.user.userId);
+    if (!owner) return res.status(403).json({ message: 'Not a business owner' });
+
+    // Verify the business belongs to the owner
+    const business = await Business.findOne({ _id: businessId, ownerId: owner._id });
+    if (!business) {
+      return res.status(404).json({ message: 'Business not found or not owned by you' });
+    }
+
+    // Get all transactions for this specific business
+    const transactions = await Transaction.find({ 
+      businessId: businessId 
+    }).populate('sellableId', 'title price');
+
+    const completedTransactions = transactions.filter(t => t.status === 'completed');
+
+    // Calculate basic metrics
+    const totalSales = completedTransactions.length;
+    const totalRevenue = completedTransactions.reduce((sum, t) => sum + t.amount, 0);
+    const totalOrders = transactions.length;
+
+    // Get recent sales (last 5)
+    const recentSales = completedTransactions.slice(0, 5);
+
+    // Calculate top products
+    const productSales = {};
+    completedTransactions.forEach(transaction => {
+      const productId = transaction.sellableId?._id?.toString();
+      if (productId) {
+        if (!productSales[productId]) {
+          productSales[productId] = {
+            product: transaction.sellableId,
+            totalSales: 0,
+            totalRevenue: 0
+          };
+        }
+        productSales[productId].totalSales += 1;
+        productSales[productId].totalRevenue += transaction.amount;
+      }
+    });
+
+    const topProducts = Object.values(productSales)
+      .sort((a, b) => b.totalRevenue - a.totalRevenue)
+      .slice(0, 5);
+
+    // Mock data for page views and conversion rate (replace with real analytics)
+    const pageViews = Math.floor(Math.random() * 300) + 100;
+    const uniqueVisitors = Math.floor(pageViews * 0.7);
+    const conversionRate = totalOrders > 0 ? (completedTransactions.length / totalOrders) * 100 : 0;
+    const customerRetention = Math.floor(Math.random() * 40) + 60; // Mock retention rate
+
+    // Sales over time (last 7 days)
+    const salesOverTime = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dayStart = new Date(date.setHours(0, 0, 0, 0));
+      const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+      
+      const daySales = completedTransactions.filter(t => {
+        const transactionDate = new Date(t.createdAt);
+        return transactionDate >= dayStart && transactionDate <= dayEnd;
+      });
+
+      salesOverTime.push({
+        date: dayStart.toISOString().split('T')[0],
+        sales: daySales.length,
+        revenue: daySales.reduce((sum, t) => sum + t.amount, 0)
+      });
+    }
+
+    const analytics = {
+      businessId,
+      businessName: business.name,
+      totalSales,
+      totalRevenue,
+      totalOrders,
+      recentSales,
+      topProducts,
+      salesOverTime,
+      pageViews,
+      uniqueVisitors,
+      conversionRate,
+      customerRetention
+    };
+
+    res.json(analytics);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 // Request business verification
 exports.requestVerification = async (req, res) => {
   try {
@@ -370,6 +474,104 @@ exports.getVerificationStatus = async (req, res) => {
     }
 
     res.json(verificationRequest);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Get analytics for a specific business
+exports.getSpecificBusinessAnalytics = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    const Transaction = require('../models/transaction.model');
+    const owner = await findOwner(req.user.userId);
+    if (!owner) return res.status(403).json({ message: 'Not a business owner' });
+
+    // Verify the business belongs to the owner
+    const business = await Business.findOne({ _id: businessId, ownerId: owner._id });
+    if (!business) {
+      return res.status(404).json({ message: 'Business not found or not owned by you' });
+    }
+
+    // Get all transactions for this specific business
+    const transactions = await Transaction.find({ 
+      businessId: businessId 
+    }).populate('sellableId', 'title price');
+
+    const completedTransactions = transactions.filter(t => t.status === 'completed');
+
+    // Calculate basic metrics
+    const totalSales = completedTransactions.length;
+    const totalRevenue = completedTransactions.reduce((sum, t) => sum + t.amount, 0);
+    const totalOrders = transactions.length;
+
+    // Get recent sales (last 5)
+    const recentSales = completedTransactions.slice(0, 5);
+
+    // Calculate top products
+    const productSales = {};
+    completedTransactions.forEach(transaction => {
+      const productId = transaction.sellableId?._id?.toString();
+      if (productId) {
+        if (!productSales[productId]) {
+          productSales[productId] = {
+            product: transaction.sellableId,
+            totalSales: 0,
+            totalRevenue: 0
+          };
+        }
+        productSales[productId].totalSales += 1;
+        productSales[productId].totalRevenue += transaction.amount;
+      }
+    });
+
+    const topProducts = Object.values(productSales)
+      .sort((a, b) => b.totalRevenue - a.totalRevenue)
+      .slice(0, 5);
+
+    // Mock data for page views and conversion rate (replace with real analytics)
+    const pageViews = Math.floor(Math.random() * 300) + 100;
+    const uniqueVisitors = Math.floor(pageViews * 0.7);
+    const conversionRate = totalOrders > 0 ? (completedTransactions.length / totalOrders) * 100 : 0;
+    const customerRetention = Math.floor(Math.random() * 40) + 60; // Mock retention rate
+
+    // Sales over time (last 7 days)
+    const salesOverTime = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dayStart = new Date(date.setHours(0, 0, 0, 0));
+      const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+      
+      const daySales = completedTransactions.filter(t => {
+        const transactionDate = new Date(t.createdAt);
+        return transactionDate >= dayStart && transactionDate <= dayEnd;
+      });
+
+      salesOverTime.push({
+        date: dayStart.toISOString().split('T')[0],
+        sales: daySales.length,
+        revenue: daySales.reduce((sum, t) => sum + t.amount, 0)
+      });
+    }
+
+    const analytics = {
+      businessId,
+      businessName: business.name,
+      totalSales,
+      totalRevenue,
+      totalOrders,
+      recentSales,
+      topProducts,
+      salesOverTime,
+      pageViews,
+      uniqueVisitors,
+      conversionRate,
+      customerRetention
+    };
+
+    res.json(analytics);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
