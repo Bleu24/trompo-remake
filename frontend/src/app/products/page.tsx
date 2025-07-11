@@ -4,6 +4,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { useState, useEffect } from 'react';
 import { productApi, type Product } from '@/utils/api';
 import { useCart } from '@/contexts/CartContext';
+import Image from 'next/image';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -151,55 +152,92 @@ export default function ProductsPage() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredProducts.map((product) => (
-                    <div key={product._id} className="feature-card group hover:scale-105 transition-transform">
-                      <div className="feature-icon bg-gradient-to-br from-blue-100 to-green-100 dark:from-blue-900/30 dark:to-green-900/30 text-blue-600 dark:text-blue-400">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                        </svg>
-                      </div>
+                    <div key={product._id} className="bg-white dark:bg-gray-700 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-200 dark:border-gray-600 overflow-hidden group hover:scale-105 transition-transform">
+                      {/* Product Image */}
+                      {product.images && product.images.length > 0 ? (
+                        <div className="aspect-video bg-gray-200 dark:bg-gray-600 overflow-hidden">
+                          <Image
+                            src={`http://localhost:5000/uploads/${product.images[0]}`}
+                            alt={product.title}
+                            width={400}
+                            height={225}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                        </div>
+                      ) : (
+                        <div className="aspect-video bg-gradient-to-br from-blue-100 to-green-100 dark:from-blue-900/30 dark:to-green-900/30 flex items-center justify-center">
+                          <svg className="w-16 h-16 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      )}
                       
-                      <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                          {product.title}
-                        </h3>
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-xl font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            {product.title}
+                          </h3>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            product.type === 'product'
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                              : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                          }`}>
+                            {product.type}
+                          </span>
+                        </div>
                         
-                        <p className="text-sm text-blue-600 dark:text-blue-400 mb-2 font-medium">
-                          {product.businessId.name}
+                        <p className="text-sm text-blue-600 dark:text-blue-400 mb-3 font-medium">
+                          {typeof product.businessId === 'object' ? product.businessId.name : 'N/A'}
                         </p>
                         
-                        <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
+                        <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2 text-sm">
                           {product.description || 'No description available'}
                         </p>
                         
-                        {product.inventory !== undefined && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                            {product.inventory > 0 
-                              ? `${product.inventory} in stock` 
-                              : 'Out of stock'
-                            }
-                          </p>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center justify-between mt-4">
-                        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                          ₱{product.price.toLocaleString()}
-                        </span>
-                        <button 
-                          disabled={product.inventory === 0}
-                          onClick={() => handleAddToCart(product)}
-                          className={`px-4 py-2 rounded-lg transition-colors font-medium ${
-                            product.inventory === 0
-                              ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                              : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
-                          }`}
-                        >
-                          {product.inventory === 0 ? 'Out of Stock' : 'Add to Cart'}
-                        </button>
-                      </div>
-                      
-                      <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                        Added {new Date(product.createdAt).toLocaleDateString()}
+                        <div className="space-y-2 text-sm mb-4">
+                          {product.inventory !== undefined && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-500 dark:text-gray-400">Stock:</span>
+                              <span className={`font-medium ${
+                                product.inventory > 0 
+                                  ? 'text-green-600 dark:text-green-400' 
+                                  : 'text-red-600 dark:text-red-400'
+                              }`}>
+                                {product.inventory > 0 ? `${product.inventory} units` : 'Out of stock'}
+                              </span>
+                            </div>
+                          )}
+
+                          {typeof product.categoryId === 'object' && product.categoryId?.name && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-500 dark:text-gray-400">Category:</span>
+                              <span className="text-gray-900 dark:text-white">
+                                {product.categoryId.name}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-600">
+                          <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                            ₱{product.price.toLocaleString()}
+                          </span>
+                          <button 
+                            disabled={product.inventory === 0}
+                            onClick={() => handleAddToCart(product)}
+                            className={`px-4 py-2 rounded-lg transition-colors font-medium ${
+                              product.inventory === 0
+                                ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
+                            }`}
+                          >
+                            {product.inventory === 0 ? 'Out of Stock' : 'Add to Cart'}
+                          </button>
+                        </div>
+                        
+                        <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                          Added {new Date(product.createdAt).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
                   ))}
