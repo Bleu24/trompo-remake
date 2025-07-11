@@ -11,6 +11,7 @@ const {
   getOwnerProducts,
   getOwnerTransactions,
   getBusinessAnalytics,
+  getSpecificBusinessAnalytics,
   requestVerification,
   getVerificationStatus,
   uploadVerificationDocs,
@@ -22,6 +23,7 @@ router.get('/businesses', auth, getOwnerBusinesses);
 router.get('/products', auth, getOwnerProducts);
 router.get('/transactions', auth, getOwnerTransactions);
 router.get('/analytics', auth, getBusinessAnalytics);
+router.get('/analytics/:businessId', auth, getSpecificBusinessAnalytics);
 router.post('/products', auth, createOwnerProduct);
 router.put('/products/:id', auth, updateOwnerProduct);
 router.delete('/products/:id', auth, deleteOwnerProduct);
