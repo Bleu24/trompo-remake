@@ -6,23 +6,123 @@ import { useRouter } from 'next/navigation';
 import { isAuthenticated, logout, getAuthToken, getUserInitials } from '@/utils/auth';
 import { useCart } from '@/contexts/CartContext';
 
+// Profile Picture Component
+interface ProfilePictureProps {
+    profilePicture: string;
+    userName: string;
+    size?: 'sm' | 'md' | 'lg';
+    showStatus?: boolean;
+}
+
+const ProfilePicture: React.FC<ProfilePictureProps> = ({ 
+    profilePicture, 
+    userName, 
+    size = 'md', 
+    showStatus = false 
+}) => {
+    const sizeClasses = {
+        sm: 'w-8 h-8 text-sm',
+        md: 'w-8 h-8 text-sm',
+        lg: 'w-10 h-10 text-base'
+    };
+
+    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        e.currentTarget.style.display = 'none';
+        const parent = e.currentTarget.parentElement;
+        if (parent) {
+            const initialsDiv = parent.querySelector('.initials-fallback') as HTMLElement;
+            if (initialsDiv) {
+                initialsDiv.style.display = 'flex';
+            }
+        }
+    };
+
+    return (
+        <div className={`${sizeClasses[size]} rounded-full flex items-center justify-center relative overflow-hidden`}>
+            {profilePicture ? (
+                <>
+                    <img
+                        src={`http://localhost:5000${profilePicture}`}
+                        alt={userName}
+                        className="w-full h-full object-cover rounded-full"
+                        onError={handleImageError}
+                    />
+                    <div 
+                        className="initials-fallback absolute inset-0 bg-gradient-to-r from-blue-500 to-green-500 dark:from-orange-500 dark:to-red-500 rounded-full flex items-center justify-center text-white font-semibold"
+                        style={{ display: 'none' }}
+                    >
+                        {getUserInitials(userName)}
+                    </div>
+                </>
+            ) : (
+                <div className="w-full h-full bg-gradient-to-r from-blue-500 to-green-500 dark:from-orange-500 dark:to-red-500 rounded-full flex items-center justify-center text-white font-semibold">
+                    {getUserInitials(userName)}
+                </div>
+            )}
+            {showStatus && (
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
+            )}
+        </div>
+    );
+};
+
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userRole, setUserRole] = useState<'customer' | 'owner' | 'admin' | null>(null);
     const [userName, setUserName] = useState<string>('');
+    const [profilePicture, setProfilePicture] = useState<string>('');
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const router = useRouter();
     const dropdownRef = useRef<HTMLDivElement>(null);
     const { getTotalItems } = useCart();
 
     useEffect(() => {
+        const fetchUserProfile = async () => {
+            try {
+                const authData = localStorage.getItem('authToken');
+                if (!authData) return;
+
+                let token: string;
+                try {
+                    // Check if it's a JSON object (from profile update) or just a token string
+                    const parsed = JSON.parse(authData);
+                    token = parsed.token || authData; // If it's an object, get the token property
+                } catch {
+                    // If parsing fails, it's just a token string
+                    token = authData;
+                }
+
+                const response = await fetch('http://localhost:5000/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const userData = await response.json();
+                    setProfilePicture(userData.profilePicture || '');
+                    setUserName(userData.name || ''); // Update the name as well
+                }
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+            }
+        };
+
         const checkAuth = () => {
             const authToken = getAuthToken();
             console.log('Navbar auth check:', authToken);
             setIsLoggedIn(authToken !== null);
             setUserRole(authToken?.role || null);
             setUserName(authToken?.name || '');
+            
+            // Fetch profile picture if user is logged in
+            if (authToken) {
+                fetchUserProfile();
+            } else {
+                setProfilePicture('');
+            }
         };
 
         // Initial check
@@ -39,15 +139,23 @@ export default function Navbar() {
             checkAuth();
         };
 
+        // Listen for profile updates
+        const handleProfileUpdate = () => {
+            console.log('Profile updated, refreshing navbar');
+            checkAuth();
+        };
+
         // Check periodically (every 5 seconds) for token expiration
         const interval = setInterval(checkAuth, 5000);
 
         window.addEventListener('storage', handleStorageChange);
         window.addEventListener('focus', handleFocus);
+        window.addEventListener('profileUpdated', handleProfileUpdate);
         
         return () => {
             window.removeEventListener('storage', handleStorageChange);
             window.removeEventListener('focus', handleFocus);
+            window.removeEventListener('profileUpdated', handleProfileUpdate);
             clearInterval(interval);
         };
     }, []);
@@ -76,6 +184,7 @@ export default function Navbar() {
         setIsLoggedIn(false);
         setUserRole(null);
         setUserName('');
+        setProfilePicture('');
         setShowProfileDropdown(false);
     };
 
@@ -159,10 +268,12 @@ export default function Navbar() {
                                         onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                                         className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors duration-200 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-700 hover:shadow-md"
                                     >
-                                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-green-500 dark:from-orange-500 dark:to-red-500 rounded-full flex items-center justify-center text-white font-semibold text-sm relative">
-                                            {getUserInitials(userName)}
-                                            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
-                                        </div>
+                                        <ProfilePicture 
+                                            profilePicture={profilePicture} 
+                                            userName={userName} 
+                                            size="md"
+                                            showStatus={true}
+                                        />
                                         <span className="text-sm font-medium hidden sm:block">{userName || 'User'}</span>
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -173,9 +284,12 @@ export default function Navbar() {
                                         <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                                             <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                                                 <div className="flex items-center space-x-3">
-                                                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-green-500 dark:from-orange-500 dark:to-red-500 rounded-full flex items-center justify-center text-white font-semibold">
-                                                        {getUserInitials(userName)}
-                                                    </div>
+                                                    <ProfilePicture 
+                                                        profilePicture={profilePicture} 
+                                                        userName={userName} 
+                                                        size="lg"
+                                                        showStatus={false}
+                                                    />
                                                     <div>
                                                         <p className="text-sm font-medium text-gray-900 dark:text-white">{userName || 'User'}</p>
                                                         <p className="text-xs text-gray-500 dark:text-gray-400">
