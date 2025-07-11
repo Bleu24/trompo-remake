@@ -188,7 +188,7 @@ exports.uploadBusinessPhotos = upload.fields([
 exports.updateBusiness = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, categoryId, locationId } = req.body;
+    const { name, description, categoryId, locationId, deleteCoverPhoto, deleteProfilePhoto } = req.body;
 
     // Find the business and check ownership
     const business = await Business.findById(id);
@@ -210,6 +210,14 @@ exports.updateBusiness = async (req, res) => {
       categoryId,
       locationId,
     };
+
+    // Handle photo deletion
+    if (deleteCoverPhoto === 'true') {
+      updateData.coverPhoto = null;
+    }
+    if (deleteProfilePhoto === 'true') {
+      updateData.profilePhoto = null;
+    }
 
     // Add photo URLs if files were uploaded
     if (req.files) {
