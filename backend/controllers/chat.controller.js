@@ -278,6 +278,24 @@ exports.setupSocket = (io) => {
   io.on('connection', (socket) => {
     console.log(`User ${socket.user.name} (${socket.user.role}) connected`);
     
+    // Join user to their personal notification room
+    socket.join(`user_${socket.userId}`);
+    console.log(`User ${socket.user.name} joined notification room user_${socket.userId}`);
+    
+    // Handle explicit user join for notifications
+    socket.on('joinUser', (userId) => {
+      if (userId === socket.userId) {
+        socket.join(`user_${userId}`);
+        console.log(`User ${socket.user.name} explicitly joined notification room user_${userId}`);
+      }
+    });
+
+    // Handle notification read events
+    socket.on('markNotificationRead', (data) => {
+      // Broadcast to all user's connections that notification was read
+      socket.to(`user_${socket.userId}`).emit('notificationRead', data);
+    });
+    
     // Join user's conversations
     socket.on('joinConversations', async () => {
       try {
