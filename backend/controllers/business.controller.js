@@ -241,4 +241,40 @@ exports.updateBusiness = async (req, res) => {
   }
 };
 
+// Track business page visit and create notification
+exports.trackBusinessVisit = async (req, res) => {
+  try {
+    const businessId = req.params.id;
+    const userId = req.user.userId;
+
+    // Get visitor information
+    const User = require('../models/user.model');
+    const Customer = require('../models/customer.model');
+    
+    const user = await User.findById(userId);
+    const customer = await Customer.findOne({ userId });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const visitorData = {
+      userId: userId,
+      customerName: user.name || user.email || 'Anonymous User'
+    };
+
+    // Create business visit notification
+    const { createBusinessVisitNotification } = require('./notification.controller');
+    const notification = await createBusinessVisitNotification(businessId, visitorData);
+
+    if (notification) {
+      res.json({ message: 'Visit tracked successfully', notification });
+    } else {
+      res.json({ message: 'Visit noted (notification not sent to avoid spam)' });
+    }
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 
