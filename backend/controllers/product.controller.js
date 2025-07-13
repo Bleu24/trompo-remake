@@ -36,7 +36,14 @@ exports.uploadImages = upload.array('images', 5); // Allow up to 5 images
 exports.getAllProducts = async (req, res) => {
   try {
     const products = await Sellable.find()
-      .populate('businessId', 'name')
+      .populate({
+        path: 'businessId',
+        select: 'name locationId',
+        populate: {
+          path: 'locationId',
+          select: 'name region'
+        }
+      })
       .populate('categoryId', 'name');
     res.json(products);
   } catch (err) {
@@ -50,7 +57,14 @@ exports.getProductsByBusiness = async (req, res) => {
     // Handle both parameter names: 'businessId' (from product routes) and 'id' (from business routes)
     const businessId = req.params.businessId || req.params.id;
     const products = await Sellable.find({ businessId })
-      .populate('businessId', 'name')
+      .populate({
+        path: 'businessId',
+        select: 'name locationId',
+        populate: {
+          path: 'locationId',
+          select: 'name region'
+        }
+      })
       .populate('categoryId', 'name');
     res.json(products);
   } catch (err) {
@@ -62,7 +76,14 @@ exports.getProductsByBusiness = async (req, res) => {
 exports.getProductById = async (req, res) => {
   try {
     const product = await Sellable.findById(req.params.id)
-      .populate('businessId', 'name')
+      .populate({
+        path: 'businessId',
+        select: 'name locationId',
+        populate: {
+          path: 'locationId',
+          select: 'name region'
+        }
+      })
       .populate('categoryId', 'name');
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.json(product);
