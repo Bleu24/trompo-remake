@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated, logout, getAuthToken, getUserInitials } from '@/utils/auth';
 import { useCart } from '@/contexts/CartContext';
+import NotificationBell from '@/components/NotificationBell';
 
 // Profile Picture Component
 interface ProfilePictureProps {
@@ -103,7 +104,7 @@ export default function Navbar() {
                 if (response.ok) {
                     const userData = await response.json();
                     setProfilePicture(userData.profilePicture || '');
-                    setUserName(userData.name || ''); // Update the name as well
+                    setUserName(userData.name || userData.email || 'User'); // Prioritize name, fallback to email, then 'User'
                 }
             } catch (error) {
                 console.error('Error fetching user profile:', error);
@@ -115,13 +116,14 @@ export default function Navbar() {
             console.log('Navbar auth check:', authToken);
             setIsLoggedIn(authToken !== null);
             setUserRole(authToken?.role || null);
-            setUserName(authToken?.name || '');
+            setUserName(authToken?.name || authToken?.email || 'User'); // Better fallback chain
             
-            // Fetch profile picture if user is logged in
+            // Fetch profile picture and latest user data if user is logged in
             if (authToken) {
                 fetchUserProfile();
             } else {
                 setProfilePicture('');
+                setUserName('');
             }
         };
 
@@ -262,6 +264,9 @@ export default function Navbar() {
                                     )}
                                 </button>
                             )}
+
+                            {/* Notification Bell */}
+                            {isLoggedIn && <NotificationBell />}
                             {isLoggedIn ? (
                                 <div className="relative" ref={dropdownRef}>
                                     <button
