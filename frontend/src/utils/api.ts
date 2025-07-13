@@ -353,6 +353,15 @@ export const businessApi = {
     });
     return handleResponse<Location[]>(response);
   },
+
+  // Track business page visit
+  trackVisit: async (businessId: string) => {
+    const response = await fetch(`${API_BASE_URL}/businesses/${businessId}/visit`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<{ message: string; notification?: any }>(response);
+  },
 };
 
 // Chat API
@@ -492,12 +501,57 @@ export const businessOwnerApi = {
   },
 };
 
+// Review API
+export const reviewApi = {
+  // Create a review
+  createReview: async (reviewData: { businessId: string; rating: number; comment: string }) => {
+    const response = await fetch(`${API_BASE_URL}/reviews`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(reviewData),
+    });
+    return handleResponse<{ message: string; review: Review }>(response);
+  },
+
+  // Get reviews for a business
+  getBusinessReviews: async (businessId: string) => {
+    const response = await fetch(`${API_BASE_URL}/businesses/${businessId}/reviews`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<Review[]>(response);
+  },
+
+  // Update a review
+  updateReview: async (reviewId: string, reviewData: { rating?: number; comment?: string }) => {
+    const response = await fetch(`${API_BASE_URL}/reviews/${reviewId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(reviewData),
+    });
+    return handleResponse<{ message: string; review: Review }>(response);
+  },
+
+  // Delete a review
+  deleteReview: async (reviewId: string) => {
+    const response = await fetch(`${API_BASE_URL}/reviews/${reviewId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<{ message: string }>(response);
+  },
+};
+
 // Types
 export interface Product {
   _id: string;
   businessId: {
     _id: string;
     name: string;
+    locationId?: {
+      _id: string;
+      name: string;
+      region?: string;
+    };
   };
   title: string;
   description?: string;
@@ -527,6 +581,7 @@ export interface Business {
   locationId?: {
     _id: string;
     name: string;
+    region?: string;
   };
   ownerId?: {
     _id: string;
@@ -582,6 +637,35 @@ export interface SearchResults {
 export interface SearchSuggestion {
   text: string;
   type: 'business' | 'product' | 'service';
+}
+
+export interface Notification {
+  _id: string;
+  userId: string;
+  type: 'order_placed' | 'order_confirmed' | 'order_completed' | 'order_cancelled' 
+       | 'payment_received' | 'review_received' | 'business_verified' 
+       | 'verification_rejected' | 'message_received' | 'dispute_opened' 
+       | 'dispute_resolved' | 'business_visited' | 'upcoming_order';
+  title: string;
+  message: string;
+  data: {
+    transactionId?: string;
+    businessId?: string;
+    orderId?: string;
+    reviewId?: string;
+    conversationId?: string;
+    disputeId?: string;
+    amount?: number;
+    customerName?: string;
+    businessName?: string;
+    visitorId?: string;
+    customerId?: string;
+  };
+  read: boolean;
+  readAt?: string;
+  actionUrl?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Conversation {
@@ -775,3 +859,85 @@ export const userApi = {
     return handleResponse<{ message: string }>(response);
   },
 };
+
+// Notification API
+export const notificationApi = {
+  // Get user notifications
+  getNotifications: async (params?: {
+    page?: number;
+    limit?: number;
+    unreadOnly?: boolean;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.unreadOnly) queryParams.append('unreadOnly', params.unreadOnly.toString());
+
+    const response = await fetch(`${API_BASE_URL}/notifications?${queryParams}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<{
+      notifications: Notification[];
+      pagination: {
+        currentPage: number;
+        totalPages: number;
+        totalNotifications: number;
+        hasMore: boolean;
+      };
+      unreadCount: number;
+    }>(response);
+  },
+
+  // Get unread notification count
+  getUnreadCount: async () => {
+    const response = await fetch(`${API_BASE_URL}/notifications/unread-count`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<{ unreadCount: number }>(response);
+  },
+
+  // Mark notification as read
+  markAsRead: async (notificationId: string) => {
+    const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<{ message: string; notification: Notification }>(response);
+  },
+
+  // Mark all notifications as read
+  markAllAsRead: async () => {
+    const response = await fetch(`${API_BASE_URL}/notifications/mark-all-read`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<{ message: string }>(response);
+  },
+
+  // Delete notification
+  deleteNotification: async (notificationId: string) => {
+    const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<{ message: string }>(response);
+  },
+};
+
+// Review interface
+export interface Review {
+  _id: string;
+  customerId: {
+    _id: string;
+    userId: {
+      _id: string;
+      name: string;
+      email: string;
+    };
+  };
+  businessId: string | Business;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  updatedAt: string;
+}
