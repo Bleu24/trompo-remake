@@ -168,7 +168,14 @@ exports.getOwnerProducts = async (req, res) => {
 
     const products = await Sellable.find({ 
       businessId: { $in: businessIds }
-    }).populate('businessId', 'name');
+    }).populate({
+      path: 'businessId',
+      select: 'name locationId',
+      populate: {
+        path: 'locationId',
+        select: 'name region'
+      }
+    });
 
     res.json(products);
   } catch (err) {
