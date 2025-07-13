@@ -11,6 +11,7 @@ const {
   getCategories,
   getLocations,
   uploadBusinessPhotos,
+  trackBusinessVisit,
 } = require('../controllers/business.controller');
 const { getProductsByBusiness } = require('../controllers/product.controller');
 
@@ -22,6 +23,7 @@ router.get('/locations', getLocations);        // Get all locations
 router.get('/owner', auth, getBusinessesByOwner); // Get businesses by owner
 router.get('/search', searchBusinesses);       // Wildcard search
 router.get('/:id', getBusinessById);           // Public: detail view
+router.post('/:id/visit', auth, trackBusinessVisit); // Track business page visit
 router.get('/:id/products', getProductsByBusiness); // Get products for a business (no auth required)
 
 module.exports = router;
