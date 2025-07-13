@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { searchApi, productApi, businessApi, type SearchResults, type Business, type Product } from '@/utils/api';
+import { searchApi, productApi, businessApi, type SearchResults, type Business, type Product, type Location } from '@/utils/api';
 
 interface SearchFilters {
   type: 'all' | 'business' | 'product' | 'service';
@@ -29,6 +29,7 @@ function SearchPageContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [availableLocations, setAvailableLocations] = useState<Location[]>([]);
   const [filters, setFilters] = useState<SearchFilters>({
     type: 'all',
     location: '',
@@ -39,6 +40,9 @@ function SearchPageContent() {
   });
 
   useEffect(() => {
+    // Load available locations on component mount
+    loadLocations();
+    
     const query = searchParams.get('q');
     if (query) {
       setSearchQuery(query);
@@ -48,6 +52,15 @@ function SearchPageContent() {
       performSearch('', filters);
     }
   }, [searchParams]);
+
+  const loadLocations = async () => {
+    try {
+      const locations = await businessApi.getLocations();
+      setAvailableLocations(locations);
+    } catch (error) {
+      console.error('Failed to load locations:', error);
+    }
+  };
 
   const performSearch = async (query: string, currentFilters: SearchFilters) => {
     try {
@@ -108,18 +121,42 @@ function SearchPageContent() {
         finalServices = finalServices.filter(p => p.price >= minPrice && p.price <= maxPrice);
       }
       
-      // Apply location filter (simplified - just check business name for now)
+      // Apply location filter - check actual location data
       if (currentFilters.location) {
         const locationFilter = currentFilters.location.toLowerCase();
-        finalProducts = finalProducts.filter(p => 
-          p.businessId.name.toLowerCase().includes(locationFilter)
-        );
-        finalServices = finalServices.filter(p => 
-          p.businessId.name.toLowerCase().includes(locationFilter)
-        );
-        finalBusinesses = finalBusinesses.filter(b => 
-          b.name.toLowerCase().includes(locationFilter)
-        );
+        
+        finalProducts = finalProducts.filter(p => {
+          const businessLocation = p.businessId.locationId;
+          if (businessLocation && typeof businessLocation === 'object' && businessLocation.name) {
+            // Check for exact match first, then partial match
+            return businessLocation.name.toLowerCase() === locationFilter ||
+                   businessLocation.name.toLowerCase().includes(locationFilter) ||
+                   (businessLocation.region && businessLocation.region.toLowerCase().includes(locationFilter));
+          }
+          return false;
+        });
+        
+        finalServices = finalServices.filter(p => {
+          const businessLocation = p.businessId.locationId;
+          if (businessLocation && typeof businessLocation === 'object' && businessLocation.name) {
+            // Check for exact match first, then partial match
+            return businessLocation.name.toLowerCase() === locationFilter ||
+                   businessLocation.name.toLowerCase().includes(locationFilter) ||
+                   (businessLocation.region && businessLocation.region.toLowerCase().includes(locationFilter));
+          }
+          return false;
+        });
+        
+        finalBusinesses = finalBusinesses.filter(b => {
+          const businessLocation = b.locationId;
+          if (businessLocation && typeof businessLocation === 'object' && businessLocation.name) {
+            // Check for exact match first, then partial match
+            return businessLocation.name.toLowerCase() === locationFilter ||
+                   businessLocation.name.toLowerCase().includes(locationFilter) ||
+                   (businessLocation.region && businessLocation.region.toLowerCase().includes(locationFilter));
+          }
+          return false;
+        });
       }
       
       // Apply category filter (simplified - check if categoryId is an object with name)
@@ -249,13 +286,19 @@ function SearchPageContent() {
               <option value="service">Services</option>
             </select>
             
-            <input
-              type="text"
-              placeholder="Location"
+            <select
               value={filters.location}
               onChange={(e) => handleFilterChange({ location: e.target.value })}
               className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-            />
+            >
+              <option value="">All Locations</option>
+              {availableLocations.map((location) => (
+                <option key={location._id} value={location.name}>
+                  {location.name}
+                  {location.region ? ` (${location.region})` : ''}
+                </option>
+              ))}
+            </select>
             
             <input
               type="text"
