@@ -1,5 +1,6 @@
 const Transaction = require('../models/transaction.model');
 const Customer = require('../models/customer.model');
+const { createOrderNotification } = require('./notification.controller');
 
 // Get all transactions for a customer
 exports.getCustomerTransactions = async (req, res) => {
@@ -73,7 +74,21 @@ exports.createTransaction = async (req, res) => {
     
     const populatedTransaction = await Transaction.findById(transaction._id)
       .populate('businessId', 'name')
-      .populate('sellableId', 'title price');
+      .populate('sellableId', 'title price')
+      .populate({
+        path: 'customerId',
+        populate: { path: 'userId', select: 'name email' }
+      });
+    
+    // Create notification for business owner
+    try {
+      console.log('Creating order notification for transaction:', populatedTransaction._id);
+      await createOrderNotification(populatedTransaction, 'order_placed', req.io);
+      console.log('Order notification created successfully');
+    } catch (notifErr) {
+      console.error('Failed to create order notification:', notifErr);
+      // Don't fail the transaction creation if notification fails
+    }
     
     res.status(201).json({ 
       message: 'Transaction created successfully', 
@@ -97,10 +112,26 @@ exports.updateTransactionStatus = async (req, res) => {
       req.params.id,
       { status },
       { new: true }
-    ).populate('businessId', 'name').populate('sellableId', 'title price');
+    ).populate('businessId', 'name ownerId')
+    .populate('sellableId', 'title price')
+    .populate({
+      path: 'customerId',
+      populate: { path: 'userId', select: 'name email' }
+    });
     
     if (!transaction) {
       return res.status(404).json({ message: 'Transaction not found' });
+    }
+    
+    // Create notification for customer about status change
+    try {
+      const notificationType = status === 'completed' ? 'order_completed' 
+                             : status === 'cancelled' ? 'order_cancelled'
+                             : 'order_confirmed';
+      await createOrderNotification(transaction, notificationType, req.io);
+    } catch (notifErr) {
+      console.error('Failed to create status update notification:', notifErr);
+      // Don't fail the status update if notification fails
     }
     
     res.json({ message: 'Transaction status updated', transaction });
