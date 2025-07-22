@@ -66,7 +66,8 @@ export const redirectToLogin = (): void => {
 
 export const validateToken = async (token: string): Promise<boolean> => {
   try {
-    const response = await fetch('http://localhost:5000/api/auth/me', {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    const response = await fetch(`${apiUrl}/auth/me`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,

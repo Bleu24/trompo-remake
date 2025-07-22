@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://trompo-remake.onrender.com/api';
 const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODZkMjY3YjdhNjBjMDJlMWFiNTVlYWIiLCJyb2xlIjoiY3VzdG9tZXIiLCJpYXQiOjE3NDA4MjA1Mjl9.mKtD_YqUV_YyIMU2G0LPeYK-fXUcIl1lmQR_jTe_Aeo';
 
 const headers = {

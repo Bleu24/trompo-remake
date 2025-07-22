@@ -489,7 +489,7 @@ function ProductResults({ products, title }: { products: Product[]; title: strin
             <div className="aspect-video bg-gray-200 dark:bg-gray-600 overflow-hidden">
               {product.images && product.images.length > 0 ? (
                 <img
-                  src={`http://localhost:5000/uploads/${product.images[0]}`}
+                  src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}/uploads/${product.images[0]}`}
                   alt={product.title}
                   className="w-full h-full object-cover"
                 />

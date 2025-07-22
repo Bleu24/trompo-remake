@@ -37,7 +37,8 @@ export default function ProfilePage() {
         if (!authToken) return;
 
         // Fetch fresh user data from server
-        const response = await fetch('http://localhost:5000/api/auth/me', {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+        const response = await fetch(`${apiUrl}/auth/me`, {
           headers: {
             'Authorization': `Bearer ${authToken.token}`,
             'Content-Type': 'application/json'
@@ -107,7 +108,7 @@ export default function ProfilePage() {
       try {
         const authToken = getAuthToken();
         if (authToken) {
-          const userResponse = await fetch('http://localhost:5000/api/auth/me', {
+          const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/me`, {
             headers: {
               'Authorization': `Bearer ${authToken.token}`,
               'Content-Type': 'application/json'
@@ -226,7 +227,7 @@ export default function ProfilePage() {
                 <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-green-500 dark:from-orange-500 dark:to-red-500 rounded-full flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
                   {userInfo?.profilePicture ? (
                     <img
-                      src={`http://localhost:5000${userInfo.profilePicture}`}
+                      src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${userInfo.profilePicture}`}
                       alt="Profile"
                       className="w-full h-full rounded-full object-cover"
                     />

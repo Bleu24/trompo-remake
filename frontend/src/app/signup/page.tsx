@@ -18,7 +18,8 @@ export default function SignupPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/api/auth/register', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${apiUrl}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, role }),
@@ -34,7 +35,7 @@ export default function SignupPage() {
           localStorage.setItem('authToken', data.token);
         } else {
           // If no token returned, try to login automatically
-          const loginRes = await fetch('http://localhost:5000/api/auth/login', {
+          const loginRes = await fetch(`${apiUrl}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),

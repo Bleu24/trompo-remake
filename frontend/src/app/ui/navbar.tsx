@@ -43,7 +43,7 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
             {profilePicture ? (
                 <>
                     <img
-                        src={`http://localhost:5000${profilePicture}`}
+                        src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${profilePicture}`}
                         alt={userName}
                         className="w-full h-full object-cover rounded-full"
                         onError={handleImageError}
@@ -94,7 +94,7 @@ export default function Navbar() {
                     token = authData;
                 }
 
-                const response = await fetch('http://localhost:5000/api/auth/me', {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/me`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'

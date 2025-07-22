@@ -201,7 +201,8 @@ export default function ManageProductsPage() {
     
     // Set existing images as previews
     if (product.images && product.images.length > 0) {
-      setEditImagePreviews(product.images.map(img => `http://localhost:5000/uploads/${img}`));
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
+      setEditImagePreviews(product.images.map(img => `${baseUrl}/uploads/${img}`));
     }
     
     setShowEditModal(true);
@@ -364,7 +365,7 @@ export default function ManageProductsPage() {
                       {product.images && product.images.length > 0 ? (
                         <div className="aspect-video bg-gray-200 dark:bg-gray-600 rounded-lg mb-4 overflow-hidden">
                           <Image
-                            src={`http://localhost:5000/uploads/${product.images[0]}`}
+                            src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}/uploads/${product.images[0]}`}
                             alt={product.title}
                             width={300}
                             height={200}

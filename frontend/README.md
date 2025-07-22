@@ -14,7 +14,7 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [https://trompo-remake.vercel.app](https://trompo-remake.vercel.app) to see the deployed application, or [http://localhost:3000](http://localhost:3000) with your browser for local development.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
@@ -24,7 +24,8 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 Set the following variables in a `.env` file or in your shell before running the frontend:
 
-- `NEXT_PUBLIC_SOCKET_URL` - URL of the Socket.IO server used by the chat
+- `NEXT_PUBLIC_SOCKET_URL` - URL of the Socket.IO server used by the chat (https://trompo-remake.onrender.com for production)
+- `NEXT_PUBLIC_API_URL` - URL of the backend API (https://trompo-remake.onrender.com/api for production)
 
 ## Learn More
 

@@ -1,6 +1,24 @@
 # Debugging Guide: Dashboard and Products Access Issues
 
-## Steps to Debug the Authentication Issue
+## Steps to Deb1. **Login Process**:
+   ```bash
+   # Test login endpoint directly
+   curl -X POST https://trompo-remake.onrender.com/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"email":"customer@example.com","password":"customerpass"}'
+   ```
+
+2. **Token Validation**:
+   ```bash
+   # Replace YOUR_TOKEN with actual token from localStorage
+   curl -X GET https://trompo-remake.onrender.com/api/auth/me \
+     -H "Authorization: Bearer YOUR_TOKEN"
+   ```
+
+3. **Products API**:
+   ```bash
+   curl -X GET https://trompo-remake.onrender.com/api/products \
+   ```on Issue
 
 ### 1. **Test Basic Authentication Flow**
 
@@ -19,7 +37,7 @@ First, let's test if the authentication system is working at all:
    ```
 
 3. **Test the login process**:
-   - Go to `http://localhost:3000/login`
+   - Go to `https://trompo-remake.vercel.app/login` (or `http://localhost:3000/login` for local development)
    - Use the test credentials: `customer@example.com` / `customerpass`
    - **Open browser console** (F12 → Console tab)
    - Look for debug messages during login
@@ -28,7 +46,7 @@ First, let's test if the authentication system is working at all:
 
 I created a test page to debug the authentication:
 
-- Go to `http://localhost:3000/test`
+- Go to `https://trompo-remake.vercel.app/test` (or `http://localhost:3000/test` for local development)
 - This page will show:
   - The parsed JWT token data
   - API test results
@@ -38,7 +56,7 @@ I created a test page to debug the authentication:
 
 I created a simplified products page to test basic routing:
 
-- Go to `http://localhost:3000/products-simple`
+- Go to `https://trompo-remake.vercel.app/products-simple` (or `http://localhost:3000/products-simple` for local development)
 - This page has minimal code and should load if authentication is working
 
 ### 4. **Check Console Logs**
@@ -54,11 +72,11 @@ I added extensive console logging. Check the browser console for:
 
 #### Issue 1: Backend Not Running
 **Symptoms**: Network errors, "Failed to fetch" messages
-**Solution**: Make sure backend is running on port 5000
+**Solution**: Make sure backend is running on https://trompo-remake.onrender.com (or port 5000 for local development)
 
 #### Issue 2: CORS Issues
 **Symptoms**: CORS errors in console
-**Solution**: Backend has CORS enabled, but check if it's blocking localhost:3000
+**Solution**: Backend has CORS enabled, but check if it's blocking the frontend domain
 
 #### Issue 3: JWT Token Issues
 **Symptoms**: Token validation failures

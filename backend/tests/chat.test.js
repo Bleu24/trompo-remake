@@ -13,7 +13,10 @@ describe('Chat API', () => {
   beforeAll(async () => {
     await mongoose.connect(process.env.MONGO_URI);
     token = jwt.sign({ userId: 'tester' }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    client = io(`http://localhost:${PORT}`, { auth: { token } });
+    const socketUrl = process.env.NODE_ENV === 'production' 
+      ? `https://trompo-remake.onrender.com` 
+      : `http://localhost:${PORT}`;
+    client = io(socketUrl, { auth: { token } });
     await new Promise((resolve) => client.on('connect', resolve));
   });
 

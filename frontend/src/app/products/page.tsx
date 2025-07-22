@@ -157,7 +157,7 @@ export default function ProductsPage() {
                       {product.images && product.images.length > 0 ? (
                         <div className="aspect-video bg-gray-200 dark:bg-gray-600 overflow-hidden">
                           <Image
-                            src={`http://localhost:5000/uploads/${product.images[0]}`}
+                            src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}/uploads/${product.images[0]}`}
                             alt={product.title}
                             width={400}
                             height={225}
