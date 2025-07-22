@@ -456,6 +456,27 @@ export default function Navbar() {
                                                 </p>
                                             </div>
                                         </div>
+                                        {userRole === 'customer' && (
+                                            <Link
+                                                href="/cart"
+                                                className="block text-gray-900 hover:text-blue-600 hover:bg-gray-50 px-3 py-2 text-base font-medium rounded-lg transition-colors duration-200 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800"
+                                                onClick={() => setIsOpen(false)}
+                                            >
+                                                <div className="flex items-center space-x-2">
+                                                    <div className="relative">
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.35 5H19m-12.65-5l-1-4m16 0V7a2 2 0 00-2-2H9l-1-4H3" />
+                                                        </svg>
+                                                        {getTotalItems() > 0 && (
+                                                            <span className="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+                                                                {getTotalItems()}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <span>Cart</span>
+                                                </div>
+                                            </Link>
+                                        )}
                                         <Link
                                             href="/profile"
                                             className="block text-gray-900 hover:text-blue-600 hover:bg-gray-50 px-3 py-2 text-base font-medium rounded-lg transition-colors duration-200 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800"
