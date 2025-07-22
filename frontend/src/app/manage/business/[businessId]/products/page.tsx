@@ -4,6 +4,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { businessApi, productApi, type Business, type Product, type Category } from '@/utils/api';
+import { getImageUrl } from '@/utils/imageUtils';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -201,8 +202,7 @@ export default function ManageProductsPage() {
     
     // Set existing images as previews
     if (product.images && product.images.length > 0) {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
-      setEditImagePreviews(product.images.map(img => `${baseUrl}/uploads/${img}`));
+      setEditImagePreviews(product.images.map(img => getImageUrl(img) || img));
     }
     
     setShowEditModal(true);
@@ -365,7 +365,7 @@ export default function ManageProductsPage() {
                       {product.images && product.images.length > 0 ? (
                         <div className="aspect-video bg-gray-200 dark:bg-gray-600 rounded-lg mb-4 overflow-hidden">
                           <Image
-                            src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}/uploads/${product.images[0]}`}
+                            src={getImageUrl(product.images[0]) || '/api/placeholder/300/200'}
                             alt={product.title}
                             width={300}
                             height={200}

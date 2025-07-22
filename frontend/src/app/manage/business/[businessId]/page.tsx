@@ -4,6 +4,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { businessApi, businessOwnerApi, type Business, type Category, type Location, type UpdateBusinessRequest } from '@/utils/api';
+import { getImageUrl } from '@/utils/imageUtils';
 import VerificationRequestModal from '@/components/VerificationRequestModal';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -281,7 +282,7 @@ export default function ManageBusinessPage() {
               <div className="relative h-48 bg-gradient-to-r from-blue-500 to-purple-600">
                 {business.coverPhoto ? (
                   <Image
-                    src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${business.coverPhoto}`}
+                    src={getImageUrl(business.coverPhoto) || '/api/placeholder/800/300'}
                     alt={`${business.name} cover`}
                     fill
                     className="object-cover"
@@ -305,7 +306,7 @@ export default function ManageBusinessPage() {
                     {business.profilePhoto ? (
                       <div className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg">
                         <Image
-                          src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${business.profilePhoto}`}
+                          src={getImageUrl(business.profilePhoto) || '/api/placeholder/128/128'}
                           alt={`${business.name} profile`}
                           width={128}
                           height={128}
@@ -669,7 +670,7 @@ export default function ManageBusinessPage() {
                     {coverPhotoPreview && !deleteCoverPhoto ? (
                       <div className="relative">
                         <Image
-                          src={coverPhotoPreview.startsWith('data:') ? coverPhotoPreview : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${coverPhotoPreview}`}
+                          src={coverPhotoPreview.startsWith('data:') ? coverPhotoPreview : (getImageUrl(coverPhotoPreview) || '/api/placeholder/400/200')}
                           alt="Cover photo preview"
                           width={400}
                           height={200}
@@ -733,7 +734,7 @@ export default function ManageBusinessPage() {
                     {profilePhotoPreview && !deleteProfilePhoto ? (
                       <div className="relative inline-block">
                         <Image
-                          src={profilePhotoPreview.startsWith('data:') ? profilePhotoPreview : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${profilePhotoPreview}`}
+                          src={profilePhotoPreview.startsWith('data:') ? profilePhotoPreview : (getImageUrl(profilePhotoPreview) || '/api/placeholder/150/150')}
                           alt="Profile photo preview"
                           width={150}
                           height={150}

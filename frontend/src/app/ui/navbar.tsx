@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated, logout, getAuthToken, getUserInitials } from '@/utils/auth';
+import { getImageUrl } from '@/utils/imageUtils';
 import { useCart } from '@/contexts/CartContext';
 import NotificationBell from '@/components/NotificationBell';
 
@@ -43,7 +44,7 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
             {profilePicture ? (
                 <>
                     <img
-                        src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${profilePicture}`}
+                        src={getImageUrl(profilePicture) || '/api/placeholder/40/40'}
                         alt={userName}
                         className="w-full h-full object-cover rounded-full"
                         onError={handleImageError}

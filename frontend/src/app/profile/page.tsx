@@ -3,6 +3,7 @@
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getAuthToken } from '@/utils/auth';
 import { userApi, type UpdateProfileRequest, type ChangePasswordRequest } from '@/utils/api';
+import { getImageUrl } from '@/utils/imageUtils';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -227,7 +228,7 @@ export default function ProfilePage() {
                 <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-green-500 dark:from-orange-500 dark:to-red-500 rounded-full flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
                   {userInfo?.profilePicture ? (
                     <img
-                      src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${userInfo.profilePicture}`}
+                      src={getImageUrl(userInfo.profilePicture) || '/api/placeholder/96/96'}
                       alt="Profile"
                       className="w-full h-full rounded-full object-cover"
                     />

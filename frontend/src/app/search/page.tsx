@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { searchApi, productApi, businessApi, type SearchResults, type Business, type Product, type Location } from '@/utils/api';
+import { getImageUrl } from '@/utils/imageUtils';
 
 interface SearchFilters {
   type: 'all' | 'business' | 'product' | 'service';
@@ -489,7 +490,7 @@ function ProductResults({ products, title }: { products: Product[]; title: strin
             <div className="aspect-video bg-gray-200 dark:bg-gray-600 overflow-hidden">
               {product.images && product.images.length > 0 ? (
                 <img
-                  src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}/uploads/${product.images[0]}`}
+                  src={getImageUrl(product.images[0]) || '/api/placeholder/400/225'}
                   alt={product.title}
                   className="w-full h-full object-cover"
                 />
