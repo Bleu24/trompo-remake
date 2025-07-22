@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         hostname: 'trompo-remake.onrender.com',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/di99wgabr/**',
+      },
     ],
   },
   eslint: {

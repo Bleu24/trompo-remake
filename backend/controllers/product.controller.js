@@ -1,33 +1,7 @@
 const Sellable = require('../models/sellable.model');
 const Business = require('../models/business.model');
 const BusinessOwner = require('../models/businessOwner.model');
-const multer = require('multer');
-const path = require('path');
-
-// Configure multer for product image uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'product-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit per file
-  },
-  fileFilter: function (req, file, cb) {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'), false);
-    }
-  }
-});
+const { upload, uploadToCloudinary, deleteFromCloudinary, extractPublicId } = require('../utils/cloudinary.utils');
 
 // Middleware for handling multiple images
 exports.uploadImages = upload.array('images', 5); // Allow up to 5 images
@@ -112,9 +86,26 @@ exports.createProduct = async (req, res) => {
       return res.status(403).json({ message: 'You can only add products to your own business' });
     }
 
-    // Handle uploaded images
-    const images = req.files ? req.files.map(file => file.filename) : [];
-    console.log('Product creation - uploaded files:', req.files?.map(f => f.filename));
+    // Upload images to Cloudinary
+    const images = [];
+    if (req.files && req.files.length > 0) {
+      console.log('Product creation - uploading files to Cloudinary:', req.files.length);
+      
+      for (const file of req.files) {
+        try {
+          const result = await uploadToCloudinary(
+            file.buffer,
+            'products',
+            `product_${businessId}_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+          );
+          images.push(result.secure_url);
+        } catch (uploadError) {
+          console.error('Failed to upload product image:', uploadError);
+          return res.status(400).json({ message: 'Image upload failed', error: uploadError.message });
+        }
+      }
+    }
+
     console.log('Product creation - images array:', images);
 
     const product = new Sellable({
@@ -168,8 +159,25 @@ exports.updateProduct = async (req, res) => {
       return res.status(403).json({ message: 'You can only update products in your own business' });
     }
 
-    // Handle uploaded images
-    const newImages = req.files ? req.files.map(file => file.filename) : [];
+    // Upload new images to Cloudinary
+    const newImages = [];
+    if (req.files && req.files.length > 0) {
+      console.log('Product update - uploading files to Cloudinary:', req.files.length);
+      
+      for (const file of req.files) {
+        try {
+          const result = await uploadToCloudinary(
+            file.buffer,
+            'products',
+            `product_${product.businessId._id}_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+          );
+          newImages.push(result.secure_url);
+        } catch (uploadError) {
+          console.error('Failed to upload product image:', uploadError);
+          return res.status(400).json({ message: 'Image upload failed', error: uploadError.message });
+        }
+      }
+    }
     
     const updateData = {
       title,
@@ -223,6 +231,20 @@ exports.deleteProduct = async (req, res) => {
     const business = await Business.findOne({ _id: product.businessId._id, ownerId: businessOwner._id });
     if (!business) {
       return res.status(403).json({ message: 'You can only delete products from your own business' });
+    }
+
+    // Delete images from Cloudinary
+    if (product.images && product.images.length > 0) {
+      for (const imageUrl of product.images) {
+        const publicId = extractPublicId(imageUrl);
+        if (publicId) {
+          try {
+            await deleteFromCloudinary(publicId);
+          } catch (deleteError) {
+            console.error('Failed to delete product image from Cloudinary:', deleteError);
+          }
+        }
+      }
     }
 
     await Sellable.findByIdAndDelete(req.params.id);

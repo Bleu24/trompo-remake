@@ -4,37 +4,7 @@ const User = require('../models/user.model');
 const generateToken = require('../utils/generateToken.utils');
 const Customer = require('../models/customer.model');
 const BusinessOwner = require('../models/businessOwner.model');
-const multer = require('multer');
-const path = require('path');
-
-// Configure multer for profile picture uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/profiles/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Only image files (JPG, PNG) are allowed!'));
-    }
-  }
-});
+const { upload, uploadToCloudinary, deleteFromCloudinary, extractPublicId } = require('../utils/cloudinary.utils');
 
 exports.upload = upload;
 
@@ -112,9 +82,33 @@ exports.updateProfile = async (req, res) => {
     if (name) updateData.name = name;
     if (email) updateData.email = email;
 
-    // Handle profile picture upload
+    // Handle profile picture upload to Cloudinary
     if (req.file) {
-      updateData.profilePicture = `/uploads/profiles/${req.file.filename}`;
+      // Get current user to check for existing profile picture
+      const currentUser = await User.findById(userId);
+      
+      // Delete old profile picture if it exists
+      if (currentUser && currentUser.profilePicture) {
+        const publicId = extractPublicId(currentUser.profilePicture);
+        if (publicId) {
+          try {
+            await deleteFromCloudinary(publicId);
+          } catch (deleteError) {
+            console.error('Failed to delete old profile picture from Cloudinary:', deleteError);
+          }
+        }
+      }
+      
+      try {
+        const result = await uploadToCloudinary(
+          req.file.buffer,
+          'profiles',
+          `profile_${userId}_${Date.now()}`
+        );
+        updateData.profilePicture = result.secure_url;
+      } catch (uploadError) {
+        return res.status(400).json({ message: 'Profile picture upload failed', error: uploadError.message });
+      }
     }
 
     const user = await User.findByIdAndUpdate(

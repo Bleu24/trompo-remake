@@ -1,37 +1,7 @@
 const Business = require('../models/business.model');
 const Category = require('../models/category.model');
 const Location = require('../models/location.model');
-const multer = require('multer');
-const path = require('path');
-
-// Configure multer for business photo uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/business/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
-    }
-  }
-});
+const { upload, uploadToCloudinary, deleteFromCloudinary, extractPublicId } = require('../utils/cloudinary.utils');
 
 // Create a new business
 exports.createBusiness = async (req, res) => {
@@ -53,13 +23,32 @@ exports.createBusiness = async (req, res) => {
       locationId,
     };
 
-    // Add photo URLs if files were uploaded
+    // Upload images to Cloudinary if files were uploaded
     if (req.files) {
-      if (req.files.coverPhoto) {
-        businessData.coverPhoto = `/uploads/business/${req.files.coverPhoto[0].filename}`;
+      if (req.files.coverPhoto && req.files.coverPhoto[0]) {
+        try {
+          const result = await uploadToCloudinary(
+            req.files.coverPhoto[0].buffer, 
+            'business/covers',
+            `business_cover_${owner._id}_${Date.now()}`
+          );
+          businessData.coverPhoto = result.secure_url;
+        } catch (uploadError) {
+          return res.status(400).json({ message: 'Cover photo upload failed', error: uploadError.message });
+        }
       }
-      if (req.files.profilePhoto) {
-        businessData.profilePhoto = `/uploads/business/${req.files.profilePhoto[0].filename}`;
+      
+      if (req.files.profilePhoto && req.files.profilePhoto[0]) {
+        try {
+          const result = await uploadToCloudinary(
+            req.files.profilePhoto[0].buffer, 
+            'business/profiles',
+            `business_profile_${owner._id}_${Date.now()}`
+          );
+          businessData.profilePhoto = result.secure_url;
+        } catch (uploadError) {
+          return res.status(400).json({ message: 'Profile photo upload failed', error: uploadError.message });
+        }
       }
     }
 
@@ -213,19 +202,85 @@ exports.updateBusiness = async (req, res) => {
 
     // Handle photo deletion
     if (deleteCoverPhoto === 'true') {
+      // Delete old cover photo from Cloudinary
+      if (business.coverPhoto) {
+        const publicId = extractPublicId(business.coverPhoto);
+        if (publicId) {
+          try {
+            await deleteFromCloudinary(publicId);
+          } catch (deleteError) {
+            console.error('Failed to delete cover photo from Cloudinary:', deleteError);
+          }
+        }
+      }
       updateData.coverPhoto = null;
     }
+    
     if (deleteProfilePhoto === 'true') {
+      // Delete old profile photo from Cloudinary
+      if (business.profilePhoto) {
+        const publicId = extractPublicId(business.profilePhoto);
+        if (publicId) {
+          try {
+            await deleteFromCloudinary(publicId);
+          } catch (deleteError) {
+            console.error('Failed to delete profile photo from Cloudinary:', deleteError);
+          }
+        }
+      }
       updateData.profilePhoto = null;
     }
 
-    // Add photo URLs if files were uploaded
+    // Upload new photos to Cloudinary if files were uploaded
     if (req.files) {
-      if (req.files.coverPhoto) {
-        updateData.coverPhoto = `/uploads/business/${req.files.coverPhoto[0].filename}`;
+      if (req.files.coverPhoto && req.files.coverPhoto[0]) {
+        // Delete old cover photo first
+        if (business.coverPhoto) {
+          const publicId = extractPublicId(business.coverPhoto);
+          if (publicId) {
+            try {
+              await deleteFromCloudinary(publicId);
+            } catch (deleteError) {
+              console.error('Failed to delete old cover photo from Cloudinary:', deleteError);
+            }
+          }
+        }
+        
+        try {
+          const result = await uploadToCloudinary(
+            req.files.coverPhoto[0].buffer,
+            'business/covers',
+            `business_cover_${owner._id}_${Date.now()}`
+          );
+          updateData.coverPhoto = result.secure_url;
+        } catch (uploadError) {
+          return res.status(400).json({ message: 'Cover photo upload failed', error: uploadError.message });
+        }
       }
-      if (req.files.profilePhoto) {
-        updateData.profilePhoto = `/uploads/business/${req.files.profilePhoto[0].filename}`;
+      
+      if (req.files.profilePhoto && req.files.profilePhoto[0]) {
+        // Delete old profile photo first
+        if (business.profilePhoto) {
+          const publicId = extractPublicId(business.profilePhoto);
+          if (publicId) {
+            try {
+              await deleteFromCloudinary(publicId);
+            } catch (deleteError) {
+              console.error('Failed to delete old profile photo from Cloudinary:', deleteError);
+            }
+          }
+        }
+        
+        try {
+          const result = await uploadToCloudinary(
+            req.files.profilePhoto[0].buffer,
+            'business/profiles',
+            `business_profile_${owner._id}_${Date.now()}`
+          );
+          updateData.profilePhoto = result.secure_url;
+        } catch (uploadError) {
+          return res.status(400).json({ message: 'Profile photo upload failed', error: uploadError.message });
+        }
       }
     }
 

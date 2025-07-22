@@ -3,37 +3,7 @@ const User = require('../models/user.model');
 const Business = require('../models/business.model');
 const Sellable = require('../models/sellable.model');
 const VerificationRequest = require('../models/verificationRequest.model');
-const multer = require('multer');
-const path = require('path');
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/verification/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|pdf/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Only images (JPG, PNG) and PDF files are allowed!'));
-    }
-  }
-});
+const { upload, uploadToCloudinary, deleteFromCloudinary, extractPublicId } = require('../utils/cloudinary.utils');
 
 // Register the authenticated user as a business owner
 exports.registerAsOwner = async (req, res) => {
@@ -432,8 +402,27 @@ exports.requestVerification = async (req, res) => {
       return res.status(400).json({ message: 'Both personal ID and business permit files are required' });
     }
 
-    const personalIdUrl = `/uploads/verification/${req.files.personalId[0].filename}`;
-    const businessPermitUrl = `/uploads/verification/${req.files.businessPermit[0].filename}`;
+    let personalIdUrl, businessPermitUrl;
+
+    try {
+      // Upload personal ID to Cloudinary
+      const personalIdResult = await uploadToCloudinary(
+        req.files.personalId[0].buffer,
+        'verification/personal-id',
+        `personal_id_${businessId}_${Date.now()}`
+      );
+      personalIdUrl = personalIdResult.secure_url;
+
+      // Upload business permit to Cloudinary
+      const businessPermitResult = await uploadToCloudinary(
+        req.files.businessPermit[0].buffer,
+        'verification/business-permits',
+        `business_permit_${businessId}_${Date.now()}`
+      );
+      businessPermitUrl = businessPermitResult.secure_url;
+    } catch (uploadError) {
+      return res.status(400).json({ message: 'Document upload failed', error: uploadError.message });
+    }
 
     // Create verification request
     const verificationRequest = new VerificationRequest({

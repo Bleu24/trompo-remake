@@ -117,8 +117,10 @@ async function seed() {
     });
 
     await VerificationRequest.create({
+      businessId: business._id,
       ownerId: owner._id,
-      documents: ['permit.pdf'],
+      personalIdUrl: 'https://res.cloudinary.com/di99wgabr/image/upload/v1/verification/sample-id',
+      businessPermitUrl: 'https://res.cloudinary.com/di99wgabr/image/upload/v1/verification/sample-permit',
       status: 'approved',
     });
 
